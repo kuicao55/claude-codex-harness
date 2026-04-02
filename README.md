@@ -22,30 +22,37 @@ A Claude Code skill plugin for structured, long-running software development pro
 
 ### 1. Install this plugin
 
-Clone this repo to wherever you like, then install it permanently into Claude Code:
+This plugin is distributed via [kuicao55/claude-plugins](https://github.com/kuicao55/claude-plugins), a central marketplace for all of kuicao55's Claude Code plugins.
+
+**Inside a Claude Code session, run:**
+
+```
+/plugin marketplace add kuicao55/claude-plugins
+```
+
+```
+/plugin install claude-codex-harness@kuicao-plugins
+```
+
+```
+/reload-plugins
+```
+
+To manage the plugin later:
+
+```
+/plugin disable   claude-codex-harness@kuicao-plugins
+/plugin enable    claude-codex-harness@kuicao-plugins
+/plugin uninstall claude-codex-harness@kuicao-plugins
+```
+
+**Alternative: per-session load without installing**
+
+Clone the repo, then launch Claude Code with `--plugin-dir`:
 
 ```bash
 git clone https://github.com/kuicao55/claude-codex-harness.git
-claude plugins install ./claude-codex-harness
-```
-
-To verify it's installed:
-
-```bash
-claude plugins list
-```
-
-To enable or disable it later:
-
-```bash
-claude plugins enable claude-codex-harness
-claude plugins disable claude-codex-harness
-```
-
-**Per-session only (no permanent install):** If you'd rather not install globally, pass `--plugin-dir` each time you launch Claude Code:
-
-```bash
-claude --plugin-dir /path/to/claude-codex-harness
+claude --plugin-dir ./claude-codex-harness
 ```
 
 ### 2. (Optional) Install Codex integration
