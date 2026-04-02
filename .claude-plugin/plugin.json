@@ -1,0 +1,16 @@
+{
+  "name": "claude-codex-harness",
+  "description": "Structured development workflow with cross-session progress tracking, activity logging, and Generator vs. Evaluator architecture with optional Codex integration",
+  "version": "1.0.0",
+  "author": {
+    "name": "kuicao"
+  },
+  "license": "MIT",
+  "keywords": [
+    "workflow",
+    "tdd",
+    "progress-tracking",
+    "codex",
+    "generator-evaluator"
+  ]
+}
