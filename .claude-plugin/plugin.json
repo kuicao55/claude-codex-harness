@@ -5,6 +5,8 @@
   "author": {
     "name": "kuicao"
   },
+  "homepage": "https://github.com/kuicao55/claude-codex-harness",
+  "repository": "https://github.com/kuicao55/claude-codex-harness",
   "license": "MIT",
   "keywords": [
     "workflow",
@@ -17,6 +19,5 @@
     "visual-companion",
     "brainstorming",
     "parallel-agents"
-  ],
-  "hooks": "hooks/hooks.json"
+  ]
 }
