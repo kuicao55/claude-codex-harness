@@ -58,6 +58,18 @@ You may remember the user's previous preference, but still ask for confirmation:
 
 Create a TodoWrite entry for every task in the plan. Mark the first task as `in_progress`.
 
+**TodoWrite mandate (hard requirement):**
+
+```
+ORCHESTRA MUST MAINTAIN A LIVE TODO LIST DURING EXECUTION.
+```
+
+At all times:
+- Exactly one task is `in_progress`
+- Completed tasks are immediately marked `completed`
+- Blocked/deferred tasks are marked `pending` (or `cancelled` if explicitly dropped)
+- The visible todo list is the source of truth for in-session progress
+
 ---
 
 ## Per-Task Execution Flow
@@ -215,6 +227,14 @@ Before marking a task complete, Orchestra must verify:
 
 If any stage was done inline by Orchestra, mark task invalid and re-run that stage via proper dispatch.
 
+### User-visible Progress Requirement
+
+If only plan checkboxes are being updated and TodoWrite is not visible/updating, treat it as a process failure and correct immediately:
+
+1. Rebuild TodoWrite from current plan status
+2. Mark current task/sub-step as `in_progress`
+3. Continue execution with live TodoWrite updates
+
 **Code Quality Review re-try limit:** If Code Quality Review has failed 3 times, escalate to user:
 
 > "Task N has failed Code Quality Review 3 times. Issues: \<summary\>. Options:
@@ -238,7 +258,23 @@ After Code Quality Review PASS:
    - If yes: prompt user "All tasks in this milestone are complete and Code Quality Review approved. Mark milestone **\<title\>** as passed? (yes/no)"
    - If confirmed: invoke `harness:progress-management` to set `passed: true`
 4. Announce: "Task N complete. Moving to Task N+1."
-5. Mark next task as `in_progress` in TodoWrite
+5. Mark current task `completed` and next task `in_progress` in TodoWrite
+
+### Per-Step Todo Updates (Superpowers-style behavior)
+
+Within each task, Orchestra must also maintain sub-step progress in TodoWrite so the user sees continuous progress, not just plan checkbox edits.
+
+Recommended sub-steps per task:
+
+1. `Task N — Executor dispatched`
+2. `Task N — Spec Review`
+3. `Task N — Code Quality Review`
+4. `Task N — Post-task logging and plan update`
+
+As each sub-step starts/completes:
+- Update TodoWrite immediately
+- Keep exactly one `in_progress` sub-step
+- Close sub-steps in order
 
 ---
 

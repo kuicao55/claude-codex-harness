@@ -30,6 +30,7 @@ A Claude Code skill plugin for structured, long-running software development pro
 | **Orchestra / Executor / Reviewer** | Every task: Executor (TDD) → Spec Reviewer (compliance) → Code Quality Reviewer (adversarial). Only Code Quality Review PASS completes a task. |
 | **Dual-engine roles** | Each role can use Claude subagent or Codex (`/codex:rescue`, `/codex:review`, `/codex:adversarial-review`). Engine choice is explicitly confirmed with the user at every task stage. |
 | **Unified command routing** | All `/harness:` commands route through `harness-entry` for consistent cross-cutting concern initialization. |
+| **Live Todo progress** | During execution, Orchestra maintains a live TodoWrite list (task + sub-step level), similar to superpowers' persistent progress panel behavior. |
 | **Cross-session progress** | `status/claude-progress.json` tracks milestones across sessions. Each session gets its own plan.md. |
 | **Activity logging** | Every completed task logged to `logs/activity-YYYY-MM-DD.jsonl` — engine used, Codex session IDs, review verdicts, deferred items. |
 | **Visual Companion** | Optional browser UI during brainstorming for mockups, architecture diagrams, and design option cards. |
