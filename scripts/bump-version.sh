@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Version bump script for claude-codex-harness
+# Version bump script for harness
 # Usage: bump-version.sh <major|minor|patch>
 #
 # Reads current version from .claude-plugin/plugin.json,
