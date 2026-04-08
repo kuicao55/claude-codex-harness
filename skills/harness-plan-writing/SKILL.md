@@ -109,7 +109,7 @@ Every plan — small or large — MUST start with this header:
 ```markdown
 # <Milestone/Feature Name> Implementation Plan
 
-> **Harness note:** This plan is executed via `harness:harness-execution` using the Orchestra / Executor / Reviewer architecture. Each task goes through Executor (TDD implementation) → Spec Reviewer (compliance check) → Code Quality Reviewer (adversarial review). Only Code Quality Review PASS closes a task.
+> **Harness note:** This plan is executed via `harness:harness-execution` using the Orchestrator / Executor / Reviewer architecture. Each task goes through Executor (TDD implementation) → Spec Reviewer (compliance check) → Code Quality Reviewer (adversarial review). Only Code Quality Review PASS closes a task.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -216,6 +216,6 @@ After saving the plan and self-review:
 >
 > Spec approved. I suggest we move to execution now. Continue? (yes/no)
 >
-> If yes, I'll use the Orchestra / Executor / Reviewer architecture: each task goes through Executor (implements with TDD) → Spec Reviewer (verifies requirements) → Code Quality Reviewer (adversarial verification). Only Code Quality Review PASS closes a task."
+> If yes, I'll use the Orchestrator / Executor / Reviewer architecture: each task goes through Executor (implements with TDD) → Spec Reviewer (verifies requirements) → Code Quality Reviewer (adversarial verification). Only Code Quality Review PASS closes a task."
 
 Wait for user confirmation before invoking `harness:harness-execution`.

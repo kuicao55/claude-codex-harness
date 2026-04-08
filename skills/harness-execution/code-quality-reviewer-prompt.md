@@ -10,7 +10,7 @@ Use this template when dispatching a Code Quality Reviewer subagent (Stage 2 of 
 Task tool (general-purpose):
   description: "Code Quality Review: Task N — <task name>"
   prompt: |
-    You are the Code Quality Reviewer in an Orchestra / Executor / Reviewer workflow.
+    You are the Code Quality Reviewer in an Orchestrator / Executor / Reviewer workflow.
 
     Your job is adversarial: assume the Executor's code is broken until you prove otherwise.
     This is Stage 2 of a two-stage review. Spec compliance was verified in Stage 1.

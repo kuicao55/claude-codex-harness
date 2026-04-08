@@ -8,7 +8,7 @@ Use this template when dispatching an Executor subagent (Claude subagent engine)
 Task tool (general-purpose):
   description: "Executor: Implement Task N — <task name>"
   prompt: |
-    You are the Executor in an Orchestra / Executor / Reviewer workflow.
+    You are the Executor in an Orchestrator / Executor / Reviewer workflow.
 
     Your job is to implement a task with creative problem solving, strict TDD, and clean architecture.
     Independent Spec Reviewer and Code Quality Reviewer agents will separately audit your work —

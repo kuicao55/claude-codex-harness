@@ -1,6 +1,6 @@
 {
   "name": "super-harness",
-  "description": "Structured development workflow with Orchestra / Executor / Reviewer architecture, cross-session progress tracking, activity logging, Visual Companion, and dual-engine (Claude subagent or Codex) execution and review",
+  "description": "Structured development workflow with Orchestrator / Executor / Reviewer architecture, cross-session progress tracking, activity logging, Visual Companion, and dual-engine (Claude subagent or Codex) execution and review",
   "version": "3.0.0",
   "author": {
     "name": "kuicao"
@@ -13,7 +13,7 @@
     "tdd",
     "progress-tracking",
     "codex",
-    "orchestra",
+    "orchestrator",
     "executor",
     "reviewer",
     "visual-companion",

@@ -1,6 +1,6 @@
 ---
 name: harness-execution
-description: "Execute implementation plans using the Orchestra / Executor / Reviewer architecture. Orchestrator coordinates Executor (implementation) and two-stage Reviewer (Spec Review then Code Quality Review). Each role can use Claude subagent or Codex as the engine. Only Code Quality Review PASS closes a task."
+description: "Execute implementation plans using the Orchestrator / Executor / Reviewer architecture. Orchestrator coordinates Executor (implementation) and two-stage Reviewer (Spec Review then Code Quality Review). Each role can use Claude subagent or Codex as the engine. Only Code Quality Review PASS closes a task."
 ---
 
 # Harness Execution — Orchestrator Architecture

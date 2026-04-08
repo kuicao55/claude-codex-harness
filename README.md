@@ -1,8 +1,8 @@
 # super-harness v3.0.0
 
-> **Built on [obra/superpowers](https://github.com/obra/superpowers)** — the agentic skills framework and software development methodology by Jesse Vincent. This project extends superpowers with cross-session milestone tracking, mandatory activity logging, an Orchestra / Executor / Reviewer agent architecture, and dual-engine Codex integration. If you haven't seen superpowers, start there first.
+> **Built on [obra/superpowers](https://github.com/obra/superpowers)** — the agentic skills framework and software development methodology by Jesse Vincent. This project extends superpowers with cross-session milestone tracking, mandatory activity logging, an Orchestrator / Executor / Reviewer agent architecture, and dual-engine Codex integration. If you haven't seen superpowers, start there first.
 
-A Claude Code skill plugin for structured, long-running software development projects. Built on an **Orchestra / Executor / Reviewer** architecture that enforces strict separation between code writers and code reviewers, with optional Codex as an alternative engine for any role.
+A Claude Code skill plugin for structured, long-running software development projects. Built on an **Orchestrator / Executor / Reviewer** architecture that enforces strict separation between code writers and code reviewers, with optional Codex as an alternative engine for any role.
 
 **Mac / Claude Code only.**
 
@@ -28,7 +28,7 @@ A Claude Code skill plugin for structured, long-running software development pro
 
 | Feature                             | Description                                                                                                                                                                          |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Orchestra / Executor / Reviewer** | Every task: Executor (TDD) → **TDD Audit** (process compliance) → Spec Reviewer (compliance) → Code Quality Reviewer (adversarial). Only Code Quality Review PASS completes a task. |
+| **Orchestrator / Executor / Reviewer** | Every task: Executor (TDD) → **TDD Audit** (process compliance) → Spec Reviewer (compliance) → Code Quality Reviewer (adversarial). Only Code Quality Review PASS completes a task. |
 | **Dual-engine roles**               | Each role can use Claude subagent or Codex (`/codex:rescue`, `/codex:review`, `/codex:adversarial-review`). Engine choice is explicitly confirmed with the user at every task stage. |
 | **Unified command routing**         | All `/harness:` commands route through `harness-entry` for consistent cross-cutting concern initialization.                                                                          |
 | **Live Todo progress**              | During execution, Orchestrator maintains a live TodoWrite list (task + sub-step level: Executor → TDD Audit → Spec Review → Code Quality Review → Logging).                                |
@@ -633,7 +633,7 @@ Both plugins can be installed simultaneously without conflict.
 | Trigger                        | SessionStart hook                                  | Explicit `/harness:` commands                                |
 | Session scope                  | Single-session                                     | Multi-session milestone tracking                             |
 | Activity tracking              | Manual                                             | Automatic JSONL log (engine, Codex IDs, deferred items)      |
-| Agent architecture             | Generator vs. Evaluator                            | Orchestra / Executor / Spec Reviewer / Code Quality Reviewer |
+| Agent architecture             | Generator vs. Evaluator                            | Orchestrator / Executor / Spec Reviewer / Code Quality Reviewer |
 | Code review                    | Single adversarial reviewer                        | Two-stage: spec compliance → adversarial quality             |
 | Codex roles                    | Generator rescue                                   | Executor + both Reviewer stages (any role)                   |
 | Visual Companion               | ✅                                                 | ✅ (adapted for harness)                                     |
