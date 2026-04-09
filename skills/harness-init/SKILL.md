@@ -19,7 +19,7 @@ Generate a comprehensive `status/PROJECT.md` by reading the entire codebase.
 ### Step 1: Run Pre-flight Check
 
 ```bash
-harness-preflight
+scripts/harness-preflight
 ```
 
 Ensure directories exist before generating context.

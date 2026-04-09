@@ -90,25 +90,27 @@ Engine Configuration:
    → 默认：(1)
 
 3. Spec Review 引擎：
-   → (1) Claude subagent  (2) Codex review  (3) Both
-   → 默认：(1)
+   → (1) Claude subagent  (2) Codex review
+   → 默认：(2)
 
 4. Code Quality Review 引擎：
-   → (1) Claude subagent  (2) Codex adversarial-review  (3) Both
-   → 默认：(3)
+   → (1) Claude subagent  (2) Codex adversarial-review
+   → 默认：(2)
 
 5. Codex 调用失败时：
    → (1) Auto-fallback to Claude  (2) 询问用户
    → 默认：(1)
 ```
 
-**After pre-configuration, execution proceeds with 0 prompts per task** (except for BLOCKED scenarios — see below).
+**MUST confirm with user before proceeding.** Display the configuration above and ask: "Engine 配置确认？（直接 Enter 使用默认值，或输入数字修改）"
 
-**When `codex_available = false`:** Q3 and Q4 default to Claude subagent regardless of user's original choice. Q5 still applies.
+**When `codex_available = false`:** Q3 and Q4 must fall back to Claude subagent. Show user the modified defaults and confirm.
 
 ### Step 4: Create Task List
 
-Create a TodoWrite entry for every task in the plan. Mark the first task as `in_progress`.
+Create a TodoWrite entry for every task in the plan. **Create tasks ONE AT A TIME, sequentially, in plan order.** Do NOT create multiple tasks in a single parallel call — this causes TodoWrite ID misalignment with plan task numbers.
+
+Mark the first task as `in_progress`.
 
 **TodoWrite mandate (hard requirement):**
 
@@ -229,8 +231,7 @@ Format and send using `codex-review-prompt.md` rescue template. Then:
 
 **Using pre-configured engine from Q3:**
 - Claude subagent → dispatch Task/Subagent with `spec-reviewer-prompt.md`
-- Codex review → output `/codex:review --background`
-- Both → dispatch both simultaneously
+- Codex review → **output `/codex:review --background "<task description>"` as text directly in main session** (Claude Code dispatches it internally). Do NOT use `Bash(codex review ...)` CLI — the slash command handles async dispatch and polling internally.
 
 Dispatch using Task/Subagent tooling and `spec-reviewer-prompt.md` template. Provide:
 
@@ -245,7 +246,10 @@ Handle Spec Reviewer verdict:
 | `SPEC_COMPLIANT` | Proceed to Step 3: Code Quality Review Decision Point               |
 | `SPEC_ISSUES`    | Return to Step 1 — dispatch Executor to fix, then re-run Spec Review |
 
-**Spec Review re-try limit:** If Spec Review has failed 3 times, escalate to user:
+**Spec Review re-try limit:** If Spec Review has failed 3 times, assess whether the reviewer clearly identified a root cause:
+
+- **Root cause clear** (e.g., reviewer pinpointed the exact bug, missing condition, or logic error): Return to Step 1 — dispatch Executor to fix the specific issue, then re-run Spec Review. Do NOT ask the user.
+- **Root cause unclear** (e.g., reviewer timed out, returned vague/inconsistent findings, or same issue persists after 3 distinct fixes): escalate to user:
 
 > "Task N has failed Spec Review 3 times. Issues: \<summary\>. Options:
 >
@@ -257,8 +261,7 @@ Handle Spec Reviewer verdict:
 
 **Using pre-configured engine from Q4:**
 - Claude subagent → dispatch Task/Subagent with `code-quality-reviewer-prompt.md`
-- Codex adversarial-review → output `/codex:adversarial-review --background`
-- Both → dispatch both simultaneously, collect results
+- Codex adversarial-review → **output `/codex:adversarial-review --background "<task description>"` as text directly in main session**. Do NOT use `Bash(codex adversarial-review ...)` CLI — `adversarial-review` has no CLI equivalent, only the slash command works.
 
 Dispatch using Task/Subagent tooling and `code-quality-reviewer-prompt.md` template. Provide:
 
@@ -273,11 +276,7 @@ Handle verdict:
 | `PASS`  | Task complete — proceed to Post-Task                                        |
 | `FAIL`  | Return to Step 1 — dispatch Executor to fix, then re-run both review stages |
 
-**If both chosen:**
-1. Collect both results
-2. If either returns FAIL → combined verdict is FAIL
-3. Merge all findings into consolidated report
-4. Both PASS → proceed to Post-Task
+**Codex note:** The slash commands `/codex:review` and `/codex:adversarial-review` handle async dispatch and polling internally when output as text in the main session. Do NOT attempt to replicate this via Bash CLI calls.
 
 **Q5 Fallback (Codex failure):**
 - If Q5 = Auto-fallback: automatically use Claude subagent without prompting
@@ -301,7 +300,10 @@ If only plan checkboxes are being updated and TodoWrite is not visible/updating,
 2. Mark current task/sub-step as `in_progress`
 3. Continue execution with live TodoWrite updates
 
-**Code Quality Review re-try limit:** If Code Quality Review has failed 3 times, escalate to user:
+**Code Quality Review re-try limit:** If Code Quality Review has failed 3 times, assess whether the reviewer clearly identified a root cause:
+
+- **Root cause clear** (e.g., reviewer pinpointed the exact security issue, performance bug, or edge case failure): Return to Step 1 — dispatch Executor to fix the specific issue, then re-run both review stages. Do NOT ask the user.
+- **Root cause unclear** (e.g., reviewer timed out, returned vague/inconsistent findings, or same issue persists after 3 distinct fixes): escalate to user:
 
 > "Task N has failed Code Quality Review 3 times. Issues: \<summary\>. Options:
 >
@@ -317,13 +319,20 @@ After Code Quality Review PASS:
 
 1. **Invoke `harness:activity-logging`** — record task completion with:
    - `executor_engine`: `claude-subagent` or `codex-rescue`
-   - `reviewer_engine`: `claude-subagent`, `codex-review`/`codex-adversarial-review`, or `both`
+   - `reviewer_engine`: `claude-subagent`, `codex-review`/`codex-adversarial-review`
    - `codex_session_id`: session-id from `/codex:result` (if Codex was used)
 2. **Update plan file** — mark task checkbox: `- [ ]` → `- [x]`
-3. **Update handoff document** — update the current task pointer in `docs/harness/handoffs/` latest file:
-   - If this is the first task of the milestone and handoff state is PLANNING → update state to IN_PROGRESS, set task_id
-   - If this is the last task of the milestone → update tasks_completed, proceed to step 4
-   - Otherwise → just update task_id to next task
+3. **Update handoff document** — use the `harness-handoff` script:
+   ```bash
+   scripts/harness-handoff IN_PROGRESS \
+     --task-id <next-task-id> \
+     --tasks-completed <comma-separated> \
+     --deferred "<any deferred items>" \
+     --decisions "<any key decisions>" \
+     --next-action "/super-harness:resume"
+   ```
+   - If this is the first task of the milestone and previous handoff state was PLANNING → use state `IN_PROGRESS`
+   - If this is the last task of the milestone → use state `MILESTONE_DONE` instead, proceed to step 4
 4. **Check if milestone is complete** — if ALL tasks in current milestone are `- [x]`:
    - Prompt user "All tasks in this milestone are complete and Code Quality Review approved.
    - If confirmed: invoke `harness:harness-handoff` with state=`MILESTONE_DONE`

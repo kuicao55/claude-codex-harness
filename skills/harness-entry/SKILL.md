@@ -14,7 +14,7 @@ This skill handles the entry point for all `/super-harness:` commands. It establ
 Before routing, run `harness-preflight` to establish project state:
 
 ```bash
-harness-preflight
+scripts/harness-preflight
 ```
 
 **Interpretation:**
@@ -92,14 +92,9 @@ Follow the full resume flow below.
 
 ### Step 1: Locate Handoff Document
 
-**Priority order:**
+Read `docs/harness/handoffs/handoff.md` — this is the single, always-current handoff file.
 
-1. **First:** Read `current_session_handoff` field from `status/claude-progress.json`
-   - If set and file exists → use it (authoritative)
-   - If set but file missing → log warning, fall back to glob
-
-2. **Fallback:** Look for the most recent file in `docs/harness/handoffs/` directory using glob.
-
+- If found: proceed to Step 2.
 - If NOT found: Tell the user:
 
   > "No handoff document found. This is a fresh start.

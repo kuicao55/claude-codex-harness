@@ -1,0 +1,283 @@
+#!/usr/bin/env bash
+# Handoff management script for super-harness
+# Works on the project repository (must be run from project root)
+#
+# Usage:
+#   harness-handoff <state> [options]
+#
+# States:
+#   PLANNING       Plan written, execution not started
+#   IN_PROGRESS    Execution underway
+#   MILESTONE_DONE All tasks in current milestone passed
+#   ALL_DONE       All milestones complete
+#
+# Flags:
+#   --task-id <id>              Current task ID (e.g., task-3). Omit if no task started.
+#   --tasks-completed <list>    Comma-separated completed task IDs (e.g., task-1,task-2)
+#   --deferred "<text>"         Deferred items (free text)
+#   --decisions "<text>"        Key decisions (free text)
+#   --next-action "<command>"   Next action command (e.g., /super-harness:execute ...)
+#   --project-dir <path>        Use specified directory instead of current directory
+
+set -e
+
+PROGRESS_FILE="status/claude-progress.json"
+HANDOFF_FILE="docs/harness/handoffs/handoff.md"
+
+# Parse global flags
+PROJECT_DIR=""
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --project-dir) PROJECT_DIR="$2"; shift 2 ;;
+        *) break ;;
+    esac
+done
+
+if [[ -n "$PROJECT_DIR" ]]; then
+    cd "$PROJECT_DIR"
+fi
+
+STATE="${1:-}"
+
+show_help() {
+    cat <<'EOF'
+harness-handoff — Handoff document management for super-harness
+
+Usage:
+  harness-handoff <state> [options]
+
+States:
+  PLANNING       Plan written, execution not started
+  IN_PROGRESS    Execution underway
+  MILESTONE_DONE All tasks in current milestone passed
+  ALL_DONE       All milestones complete
+
+Options:
+  --task-id <id>              Current task ID (e.g., task-3)
+  --tasks-completed <list>    Comma-separated completed task IDs (e.g., task-1,task-2)
+  --deferred "<text>"         Deferred items (free text)
+  --decisions "<text>"        Key decisions (free text)
+  --next-action "<command>"   Next action command
+  --project-dir <path>        Use specified directory
+
+Notes:
+  - spec_file, plan_file, and milestone_id are read from status/claude-progress.json
+  - status/PROJECT.md is included in Context Index if it exists
+  - The handoff file is always docs/harness/handoffs/handoff.md (single file, overwritten)
+  - status/claude-progress.json is updated with the handoff path
+
+Examples:
+  harness-handoff PLANNING --next-action "/super-harness:execute --plan docs/harness/plans/2026-04-09-milestone-1.md"
+  harness-handoff IN_PROGRESS --task-id task-3 --tasks-completed task-1,task-2 --next-action "/super-harness:resume"
+  harness-handoff MILESTONE_DONE --tasks-completed task-1,task-2,task-3 --decisions "Used Codex for all reviews"
+  harness-handoff ALL_DONE --tasks-completed task-1,task-2,task-3,task-4,task-5,task-6
+EOF
+}
+
+# Validate state
+validate_state() {
+    case "$STATE" in
+        PLANNING|IN_PROGRESS|MILESTONE_DONE|ALL_DONE) ;;
+        *) echo "Error: Invalid state '${STATE}'. Must be PLANNING, IN_PROGRESS, MILESTONE_DONE, or ALL_DONE."; exit 1 ;;
+    esac
+}
+
+# Parse options
+TASK_ID=""
+TASKS_COMPLETED=""
+DEFERRED=""
+DECISIONS=""
+NEXT_ACTION=""
+
+shift 2>/dev/null || true
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --task-id) TASK_ID="$2"; shift 2 ;;
+        --tasks-completed) TASKS_COMPLETED="$2"; shift 2 ;;
+        --deferred) DEFERRED="$2"; shift 2 ;;
+        --decisions) DECISIONS="$2"; shift 2 ;;
+        --next-action) NEXT_ACTION="$2"; shift 2 ;;
+        --project-dir) shift 2 ;;  # already handled above
+        *) shift ;;
+    esac
+done
+
+# Validate
+if [[ -z "$STATE" ]]; then
+    show_help
+    exit 1
+fi
+
+validate_state
+
+if [[ ! -f "$PROGRESS_FILE" ]]; then
+    echo "Error: No progress file at ${PROGRESS_FILE}. Run harness-milestone init first."
+    exit 1
+fi
+
+# Create handoff directory
+mkdir -p "$(dirname "$HANDOFF_FILE")"
+
+# Generate handoff document using python3 (reads claude-progress.json for structured fields)
+python3 <<PYEOF
+import json, os, datetime
+
+with open('${PROGRESS_FILE}') as f:
+    d = json.load(f)
+
+# Extract structured fields from claude-progress.json
+spec_file = d.get('spec_file', '')
+
+# Find current (first non-passed) milestone
+milestone_id = ''
+plan_file = ''
+for m in d.get('milestones', []):
+    if not m.get('passed'):
+        milestone_id = m['id']
+        plan_file = m.get('plan_file') or ''
+        break
+
+# If all milestones passed (ALL_DONE), use the last one
+if not milestone_id and d.get('milestones'):
+    last = d['milestones'][-1]
+    milestone_id = last['id']
+    plan_file = last.get('plan_file') or ''
+
+# Check if PROJECT.md exists
+project_md_exists = os.path.exists('status/PROJECT.md')
+
+# Current timestamp
+now = datetime.datetime.now()
+timestamp = now.strftime('%Y-%m-%d %H:%M')
+
+# Build task_id line
+task_id = '${TASK_ID}' or 'null'
+if task_id == 'null':
+    task_id_line = '- task_id: null (no task started yet)'
+elif '${STATE}' == 'IN_PROGRESS':
+    task_id_line = f'- task_id: {task_id}'
+else:
+    task_id_line = f'- task_id: {task_id}'
+
+# Build tasks_completed line
+tasks_completed_str = '${TASKS_COMPLETED}'.strip()
+if tasks_completed_str:
+    tasks = [t.strip() for t in tasks_completed_str.split(',') if t.strip()]
+    tasks_formatted = ', '.join(tasks)
+    tasks_line = f'- tasks_completed: [{tasks_formatted}]'
+else:
+    tasks_line = '- tasks_completed: []'
+
+# Build context index
+context_lines = [
+    f'- **spec:** {spec_file}',
+    f'- **plan:** {plan_file}',
+    f'- **progress:** status/claude-progress.json',
+]
+if project_md_exists:
+    context_lines.append('- **project:** status/PROJECT.md')
+context_index = '\n'.join(context_lines)
+
+# Build deferred items section
+deferred = '${DEFERRED}'.strip()
+if deferred:
+    deferred_section = f'## Deferred Items\n{deferred}'
+else:
+    deferred_section = '## Deferred Items\nNone'
+
+# Build key decisions section
+decisions = '${DECISIONS}'.strip()
+if decisions:
+    decisions_section = f'## Key Decisions\n{decisions}'
+else:
+    decisions_section = '## Key Decisions\nNone'
+
+# Build next action
+next_action = '${NEXT_ACTION}'.strip()
+if next_action:
+    next_action_section = f'## Next Action\n{next_action}'
+else:
+    next_action_section = '## Next Action\n(start next session with /super-harness:resume)'
+
+# Assemble handoff document
+handoff = f"""# Handoff — {timestamp}
+
+## State
+**Status:** ${STATE}
+
+## Context Index
+{context_index}
+
+## Current Position
+- milestone_id: {milestone_id}
+{task_id_line}
+{tasks_line}
+
+{deferred_section}
+
+{decisions_section}
+
+{next_action_section}
+"""
+
+# Write handoff file
+with open('${HANDOFF_FILE}', 'w') as f:
+    f.write(handoff)
+
+# Update current_session_handoff in claude-progress.json
+today = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+d['current_session_handoff'] = '${HANDOFF_FILE}'
+d['updated_at'] = today
+
+with open('${PROGRESS_FILE}', 'w') as f:
+    json.dump(d, f, indent=2)
+    f.write('\n')
+
+print(f"Handoff written: ${HANDOFF_FILE}")
+print(f"State: ${STATE}")
+print(f"Milestone: {milestone_id}")
+PYEOF
+
+# Handle milestone completion
+if [[ "$STATE" == "MILESTONE_DONE" ]]; then
+    MILESTONE_ID=$(python3 -c "
+import json
+with open('${PROGRESS_FILE}') as f:
+    d = json.load(f)
+for m in d.get('milestones', []):
+    if not m.get('passed'):
+        print(m['id'])
+        break
+")
+    if [[ -n "$MILESTONE_ID" ]]; then
+        SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+        "${SCRIPT_DIR}/harness-milestone" complete "$MILESTONE_ID"
+    fi
+fi
+
+if [[ "$STATE" == "ALL_DONE" ]]; then
+    # Complete any remaining uncompleted milestones
+    REMAINING=$(python3 -c "
+import json
+with open('${PROGRESS_FILE}') as f:
+    d = json.load(f)
+for m in d.get('milestones', []):
+    if not m.get('passed'):
+        print(m['id'])
+" 2>/dev/null || true)
+    if [[ -n "$REMAINING" ]]; then
+        SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+        for mid in $REMAINING; do
+            "${SCRIPT_DIR}/harness-milestone" complete "$mid"
+        done
+    fi
+fi
+
+# Git commit
+git add "$HANDOFF_FILE" "$PROGRESS_FILE" 2>/dev/null || true
+if git diff --cached --quiet 2>/dev/null; then
+    echo "No changes to commit."
+else
+    git commit -m "harness: handoff — ${STATE,,}" 2>/dev/null || true
+    echo "Committed."
+fi

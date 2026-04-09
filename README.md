@@ -1,4 +1,4 @@
-# super-harness v3.2.2
+# super-harness v3.2.3
 
 > **Built on [obra/superpowers](https://github.com/obra/superpowers)** — the agentic skills framework and software development methodology by Jesse Vincent. This project extends superpowers with cross-session milestone tracking, mandatory activity logging, an Orchestrator / Executor / Reviewer agent architecture, and dual-engine Codex integration. If you haven't seen superpowers, start there first.
 
@@ -232,7 +232,7 @@ If ANY box is unchecked → log PROCESS_VIOLATION, stop, correct before continui
 │  │                                                                  │   │
 │  │  SPEC_COMPLIANT  →  proceed to Step 3                            │   │
 │  │  SPEC_ISSUES     →  back to Step 1 (fix loop)                    │   │
-│  │  3 failures      →  escalate to user                             │   │
+│  │  3 failures      →  auto-retry if root cause clear, else escalate│   │
 │  └──────────────────────────────────────────────────────────────────┘   │
 │                          │                                              │
 │                          ▼                                              │
@@ -241,11 +241,10 @@ If ANY box is unchecked → log PROCESS_VIOLATION, stop, correct before continui
 │  │  Choose engine:                                                  │   │
 │  │  1. Claude subagent  →  code-quality-reviewer-prompt.md          │   │
 │  │  2. Codex adversarial→  /codex:adversarial-review [focus text]   │   │
-│  │  3. Both             →  dual review (max quality)                │   │
 │  │                                                                  │   │
 │  │  PASS  →  task complete  ✓                                       │   │
 │  │  FAIL  →  back to Step 1 (fix loop)                              │   │
-│  │  3 failures  →  escalate to user                                 │   │
+│  │  3 failures  →  auto-retry if root cause clear, else escalate    │   │
 │  └──────────────────────────────────────────────────────────────────┘   │
 │                          │                                              │
 │                          ▼                                              │
@@ -363,17 +362,15 @@ flowchart LR
     F --> G{User chooses}
     G -->|Claude subagent| H[Dispatch Task tool with prompt template]
     G -->|Codex| I{Which role?}
-    G -->|Both| J[Dispatch both + merge findings]
 
     I -->|Executor| K["/codex:rescue --background"]
     I -->|Spec Review| L["/codex:review --background"]
     I -->|Code Quality| M["/codex:adversarial-review --background"]
 
-    K --> N[Poll /codex:status]
+    K --> N[Slash commands handle polling internally]
     L --> N
     M --> N
-    N --> O["/codex:result: parse output"]
-    O --> P[Map to standard Executor/Reviewer format]
+    N --> O["Parse output to standard Executor/Reviewer format"]
 ```
 
 ---
@@ -510,12 +507,8 @@ Same flow as Scenario A
 ┌──────────────────────────────────────────────┐
 │  harness-entry (resume mode)                  │
 │                                              │
-│  1. Read current_session_handoff from         │
-│     status/claude-progress.json              │
-│     (authoritative — not glob)                │
-│                                              │
-│  2. Fall back to most recent file in          │
-│     docs/harness/handoffs/ if needed         │
+│  1. Read docs/harness/handoffs/handoff.md     │
+│     (single file, always current)            │
 │                                              │
 │  3. Validate: spec + plan + progress          │
 │     files all exist                           │
@@ -538,9 +531,9 @@ Same flow as Scenario A
         └── ALL_DONE  → prompt: finish / new project
 ```
 
-**Resume uses `current_session_handoff` (authoritative), not file timestamps.**
+**Resume reads the single handoff file `docs/harness/handoffs/handoff.md`.**
 
-If the handoff file was manually deleted after the last session, resume falls back to the most recent remaining handoff and warns you.
+The handoff document is managed by `scripts/harness-handoff` — always overwritten, never creates duplicate files. Historical state is preserved in `claude-progress.json` and activity logs.
 
 #### Scenario D: Adding a New Milestone to an Existing Project
 
@@ -858,6 +851,7 @@ super-harness/
   scripts/
     harness-preflight              # Pre-flight check (project state detection, dir creation, file validation)
     harness-milestone             # Milestone management (init, add, set-plan, complete, list, next, status)
+    harness-handoff               # Handoff document management (single file, auto-commit)
     bump-version.sh                # Version bump utility
   skills/
     harness-entry/SKILL.md         # Command routing + resume logic
@@ -904,7 +898,7 @@ your-project/
       plans/
         YYYY-MM-DD-milestone-N.md       # Per-session implementation plans
       handoffs/
-        YYYY-MM-DD-HH-MM.md             # Session handoff documents (created by harness:harness-handoff)
+        handoff.md                   # Single handoff document (managed by scripts/harness-handoff)
   logs/
     activity-YYYY-MM-DD.jsonl       # Daily activity log
   .harness/                         # Visual Companion session files

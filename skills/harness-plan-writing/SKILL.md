@@ -62,12 +62,18 @@ This mirrors the logic in `harness-init` Step 3 so both skills behave consistent
 
    Example: `harness-milestone init "PocketMon" --spec docs/harness/specs/2026-04-09-pocketmon-design.md`
 
-2. Show milestone list to confirm:
+2. Add the first milestone (required before `set-plan` can be called):
+   ```
+   harness-milestone add "<milestone title>" --spec docs/harness/specs/YYYY-MM-DD-<topic>-design.md
+   ```
+   Use the project name as the milestone title (e.g., `"snake game implementation"`).
+
+3. Show milestone list to confirm:
    ```
    harness-milestone list
    ```
 
-3. Confirm with user before proceeding.
+4. Confirm with user before proceeding.
 
 **If the file EXISTS (resuming a project):**
 
