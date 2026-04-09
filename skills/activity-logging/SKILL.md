@@ -42,7 +42,7 @@ Invoke immediately after every task that receives a Code Quality Review PASS ver
 
 ## Session ID Generation
 
-Before writing the first entry of a session, generate the `session_id`:
+Before writing the first entry of a session, generate the `session_id` and `session_start_date`:
 
 1. Check if `logs/activity-YYYY-MM-DD.jsonl` exists for today
 2. If the file EXISTS:
@@ -51,7 +51,8 @@ Before writing the first entry of a session, generate the `session_id`:
    - New session_id = `session-YYYY-MM-DD-{NNN+1:03d}` (e.g. `session-2026-04-07-004`)
 3. If the file does NOT exist:
    - New session_id = `session-YYYY-MM-DD-001`
-4. Reuse the same `session_id` for all entries within a single Claude session
+4. Record `session_start_date` = today's date (`YYYY-MM-DD`) — this is the date the session began
+5. Reuse the same `session_id` and `session_start_date` for all entries within a single Claude session
 
 ---
 
@@ -63,6 +64,7 @@ Each entry is a single JSON object on one line:
 {
   "timestamp": "2026-04-02T14:32:15Z",
   "session_id": "session-2026-04-02-001",
+  "session_start_date": "2026-04-02",
   "milestone_id": "milestone-2",
   "task_id": "task-3",
   "task_title": "Implement task assignment endpoint",
@@ -87,6 +89,7 @@ Each entry is a single JSON object on one line:
 | --------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------- |
 | `timestamp`           | ISO 8601       | When the log entry was written                                                                                       |
 | `session_id`          | string         | `"session-YYYY-MM-DD-NNN"` — see Session ID Generation above                                                         |
+| `session_start_date`  | string         | `"YYYY-MM-DD"` — the date when this session started (for cross-midnight aggregation)                                |
 | `milestone_id`        | string or null | The milestone ID from `claude-progress.json`, or `null` for small projects                                           |
 | `task_id`             | string         | `"task-N"` matching the task number in the plan                                                                      |
 | `task_title`          | string         | Short description of the task                                                                                        |
@@ -137,10 +140,20 @@ When `/super-harness:resume` is invoked and a plan file is found but partially e
 - Surface any `notes` about deferred items or concerns
 - Confirm the session context before continuing
 
+**Cross-midnight session aggregation:**
+
+When resuming, collect activity log entries by `session_id` rather than by date file. Steps:
+
+1. From the handoff document, read the `session_id` of the previous session
+2. From the handoff document, read the `session_start_date`
+3. Read ALL `logs/activity-*.jsonl` files from `session_start_date` through today
+4. Filter entries matching the target `session_id`
+5. Display in chronological order
+
 When displaying the resume summary, the entry skill shows recent log entries:
 
 ```
-Recent activity (from logs/activity-2026-04-07.jsonl):
+Recent activity (from logs/activity-2026-04-07.jsonl and logs/activity-2026-04-08.jsonl):
   14:32 — task-3 PASS (DONE → SPEC_COMPLIANT → PASS) [engine: claude-subagent / claude-subagent]
   14:55 — task-4 PASS (DONE → SPEC_COMPLIANT → FAIL_THEN_PASS — Reviewer found null check missing at line 42) [engine: claude-subagent / codex-adversarial-review]
   15:20 — task-5 BLOCKED — Codex rescue invoked, session: session-abc123
@@ -156,6 +169,7 @@ For non-execution phases, use simplified entries:
 {
   "timestamp": "2026-04-01T10:15:00Z",
   "session_id": "session-2026-04-01-001",
+  "session_start_date": "2026-04-01",
   "milestone_id": null,
   "task_id": "brainstorm-session",
   "task_title": "Project brainstorming session",

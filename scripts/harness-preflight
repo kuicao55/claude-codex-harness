@@ -1,0 +1,159 @@
+#!/usr/bin/env bash
+# Pre-flight check for super-harness
+# Works on the project repository (must be run from project root)
+#
+# Exit codes:
+#   0 = proceed (check complete)
+#   1 = warning (can continue but issues exist)
+#   2 = error (should not proceed)
+#
+# Usage:
+#   harness-preflight [--project-dir <path>]
+#
+# Flags:
+#   --project-dir <path>   Use specified directory instead of current directory
+
+set -e
+
+PROJECT_DIR=""
+
+# Parse flags
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --project-dir) PROJECT_DIR="$2"; shift 2 ;;
+        *) shift ;;
+    esac
+done
+
+if [[ -n "$PROJECT_DIR" ]]; then
+    cd "$PROJECT_DIR"
+fi
+
+show_warning() {
+    echo "WARNING: $1"
+}
+
+show_info() {
+    echo "INFO: $1"
+}
+
+show_error() {
+    echo "ERROR: $1"
+}
+
+# Check helpers
+has_git() {
+    git rev-parse --git-dir >/dev/null 2>&1
+}
+
+has_progress() {
+    [[ -f "status/claude-progress.json" ]]
+}
+
+# Track exit state
+exit_code=0
+
+# Check git initialization
+if ! has_git; then
+    show_warning "Not a git repository. Activity logging and handoffs require git."
+    show_warning "Run 'git init' to initialize, or some features may not work."
+    exit_code=1
+fi
+
+# Fresh project (no progress file)
+if ! has_progress; then
+    show_info "Fresh project detected. Creating directory structure..."
+
+    mkdir -p status
+    mkdir -p docs/harness/specs
+    mkdir -p docs/harness/plans
+    mkdir -p docs/harness/handoffs
+    mkdir -p logs
+
+    echo ""
+    echo "Created directories:"
+    echo "  - status/"
+    echo "  - docs/harness/specs/"
+    echo "  - docs/harness/plans/"
+    echo "  - docs/harness/handoffs/"
+    echo "  - logs/"
+    echo ""
+    show_info "Ready to start. Run /super-harness:brainstorm or /super-harness:plan to begin."
+
+    exit $exit_code
+fi
+
+# Existing project: ensure directory structure exists
+show_info "Existing project detected. Checking directory structure..."
+
+for dir in docs/harness/specs docs/harness/plans docs/harness/handoffs logs; do
+    if [[ ! -d "$dir" ]]; then
+        mkdir -p "$dir"
+        echo "  Created: $dir"
+    else
+        echo "  OK: $dir"
+    fi
+done
+
+# Validate referenced files exist
+python3 <<'PYEOF'
+import json
+import os
+import sys
+
+try:
+    with open('status/claude-progress.json') as f:
+        d = json.load(f)
+except json.JSONDecodeError:
+    print("ERROR: status/claude-progress.json is malformed JSON.")
+    print("Please fix or delete the file and run preflight again.")
+    sys.exit(2)
+
+issues = []
+
+# Check top-level spec
+spec = d.get('spec_file')
+if spec and not os.path.exists(spec):
+    issues.append(f"MISSING top-level spec_file: {spec}")
+
+# Check milestone specs and plans
+for m in d.get('milestones', []):
+    mspec = m.get('spec_file')
+    if mspec and not os.path.exists(mspec):
+        issues.append(f"MISSING spec for {m['id']}: {mspec}")
+    mplan = m.get('plan_file')
+    if mplan and not os.path.exists(mplan):
+        issues.append(f"MISSING plan for {m['id']}: {mplan}")
+
+if issues:
+    print("")
+    print("WARNING: Referenced files are missing:")
+    for i in issues:
+        print(f"  - {i}")
+    print("")
+    print("Run /super-harness:status to see current state.")
+    print("Resume may fail if referenced files are missing.")
+    sys.exit(1)
+
+# Check current_session_handoff if set
+handoff = d.get('current_session_handoff')
+if handoff and not os.path.exists(handoff):
+    print("")
+    print("WARNING: current_session_handoff points to non-existent file:")
+    print(f"  {handoff}")
+    print("Resume will fall back to finding the most recent handoff file.")
+    sys.exit(1)
+PYEOF
+
+py_exit=$?
+
+if [[ $py_exit -eq 0 ]]; then
+    echo ""
+    echo "Pre-flight check complete. No issues found."
+elif [[ $py_exit -eq 1 ]]; then
+    exit_code=1
+else
+    exit_code=2
+fi
+
+exit $exit_code

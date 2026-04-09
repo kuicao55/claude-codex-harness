@@ -78,6 +78,23 @@ For the current milestone (the first `passed: false` entry):
    Example: `harness-milestone set-plan milestone-1 docs/harness/plans/2026-04-09-milestone-1.md`
 4. Commit: `git add docs/harness/plans/ && git commit -m "harness: plan for milestone-1"`
 
+## Step 3b: Deprecate Old Plan (if re-planning)
+
+If the milestone already has a `plan_file` in `status/claude-progress.json`, you are **re-planning** it. The old plan file must be deprecated to avoid confusion:
+
+1. Read the old plan path from `status/claude-progress.json`
+2. Check if the old file exists — if not, skip deprecation
+3. If the old file exists:
+   - Rename it: `mv old-plan.md old-plan.md.deprecated-YYYY-MM-DD`
+   - Add deprecation header to the renamed file:
+     ```markdown
+     ---
+     deprecated: YYYY-MM-DD
+     replaced_by: docs/harness/plans/YYYY-MM-DD-<milestone-id>.md
+     ---
+     ```
+   - Commit: `git add docs/harness/plans/ && git commit -m "harness: deprecate old plan for milestone-N"`
+
 ---
 
 ## Plan Document Format

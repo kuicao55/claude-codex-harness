@@ -32,7 +32,18 @@ Compare test file(s) vs. implementation file(s):
 - ✅ Test file created at or before implementation file → proceed
 - ❌ Implementation file created before test file → **TDD_AUDIT: FAIL**
 
-If files are not yet committed (no git history), check with `ls -la` timestamps and note it as CANNOT_VERIFY (treated as FAIL).
+**Special case — files in a git worktree:**
+
+If `git log` returns no history for a file (file exists but no commits found):
+1. Check if the file is inside a git worktree: `git worktree list`
+2. If the file is in a worktree and has committed changes:
+   - Use `git --work-tree=<worktree-path> log --diff-filter=A --format="%H %ad %s" --date=iso -- <file>` to get worktree-specific history
+   - Compare worktree commit times for test vs. implementation
+3. If worktree has no committed changes yet (truly new files) → **TDD_AUDIT: CANNOT_VERIFY**
+
+**If files are not yet committed (no git history and not in a worktree):**
+
+Use `ls -la` timestamps as a fallback hint and note it as **TDD_AUDIT: CANNOT_VERIFY**.
 
 ### Check 2: First Test Run Was RED
 
@@ -85,10 +96,37 @@ Notes (if any checks had caveats):
 
 ### CANNOT_VERIFY Handling
 
-If any check returns CANNOT_VERIFY (e.g., git history unavailable, TEST_OUTPUT missing):
+**CANNOT_VERIFY is handled contextually — not all CANNOT_VERIFY cases are equal:**
 
-- Treat as **TDD_AUDIT: FAIL** by default (do not trust unverified claims)
-- Orchestrator: return task to Executor with `Status: PROCESS_VIOLATION` for re-implementation
+| Situation | Treatment | Reason |
+|-----------|-----------|--------|
+| Files in a **worktree** with committed changes | **WARNING** (not FAIL) | Worktree isolation is intentional design; audit should not penalize parallel execution |
+| Files in a **worktree** with no commits | **TDD_AUDIT: FAIL** | No verification possible; Executor must commit files first |
+| Files **not committed** (working tree only) | **TDD_AUDIT: FAIL** | Uncommitted files are unverified claims |
+| **TEST_OUTPUT** completely missing | **TDD_AUDIT: FAIL** | No evidence of TDD discipline |
+
+**Output format for CANNOT_VERIFY:**
+
+```
+### TDD Audit Result: CANNOT_VERIFY
+
+Checks completed:
+1. File creation order: CANNOT_VERIFY (worktree — history unavailable)
+2. First test run was RED: PASS | FAIL | CANNOT_VERIFY
+3. Tests not hollow: PASS | FAIL
+4. Public interface coverage: PASS | FAIL | N/A
+
+Overall: TDD_AUDIT: CANNOT_VERIFY
+
+Notes (if any checks had caveats):
+- File creation order: Cannot verify in worktree. Treat as WARNING only.
+  Orchestrator should use worktree-aware git log if available.
+```
+
+**Orchestrator guidance for CANNOT_VERIFY:**
+
+- If worktree WARNING → proceed with caution; consider running TDD audit again after Executor commits
+- If FAIL cases → return task to Executor with `Status: PROCESS_VIOLATION` for re-implementation
 
 ## Referenced Rules
 

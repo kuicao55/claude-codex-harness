@@ -177,7 +177,7 @@ PYEOF
 # Initialize new progress file
 cmd_init() {
     local project_name="$1"
-    local spec_path="docs/harness/specs/"
+    local spec_path=""
     local today
     today=$(date +%Y-%m-%dT%H:%M:%SZ)
 
@@ -246,6 +246,16 @@ cmd_add() {
     local depends_array="[]"
     if [[ -n "$depends_on" ]]; then
         depends_array="[\"${depends_on}\"]"
+    fi
+
+    # If spec_path not provided, inherit from top-level spec_file
+    if [[ -z "$spec_path" ]]; then
+        spec_path=$(python3 -c "
+import json
+with open('${PROGRESS_FILE}') as f:
+    d = json.load(f)
+print(d.get('spec_file', '') or '')
+")
     fi
 
     python3 <<PYEOF
@@ -335,6 +345,13 @@ import json, datetime
 
 with open('${PROGRESS_FILE}') as f:
     d = json.load(f)
+
+# Check for plan file conflict with other milestones
+for m in d.get('milestones', []):
+    if m['id'] != '${milestone_id}' and m.get('plan_file') == '${plan_file}':
+        print(f"ERROR: Milestone {m['id']} already links to plan file: ${plan_file}")
+        print("Two milestones cannot share the same plan file. Use a different plan file path.")
+        exit(1)
 
 for m in d.get('milestones', []):
     if m['id'] == '${milestone_id}':

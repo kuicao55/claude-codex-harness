@@ -9,6 +9,26 @@ This skill handles the entry point for all `/super-harness:` commands. It establ
 
 **Announce at start:** "I'm using the harness-entry skill to route this command."
 
+## Pre-flight Check
+
+Before routing, run `harness-preflight` to establish project state:
+
+```bash
+harness-preflight
+```
+
+**Interpretation:**
+
+| Scenario | What it means | User message |
+|----------|---------------|--------------|
+| Fresh project (no progress file) | First time using harness | "First time using harness in this project. Directory structure created. Ready to start." |
+| Existing project | Resuming or adding milestones | Display current milestone and status |
+| Git not initialized | Warning | "WARNING: This is not a git repository. Git is required for activity logging and handoffs to work properly." |
+| Missing directories | Auto-created | "Created missing directories: ..." |
+| Referenced files missing | Warning with list | Show which spec/plan files are missing |
+
+**Do NOT proceed with any routing until pre-flight check completes.**
+
 ## Cross-Cutting Concerns
 
 Before routing, establish these two skills as active cross-cutting concerns for this session:
@@ -62,7 +82,13 @@ Follow the full resume flow below.
 
 ### Step 1: Locate Handoff Document
 
-Look for the most recent file in `docs/harness/handoffs/` directory.
+**Priority order:**
+
+1. **First:** Read `current_session_handoff` field from `status/claude-progress.json`
+   - If set and file exists → use it (authoritative)
+   - If set but file missing → log warning, fall back to glob
+
+2. **Fallback:** Look for the most recent file in `docs/harness/handoffs/` directory using glob.
 
 - If NOT found: Tell the user:
 
@@ -104,6 +130,30 @@ Read the handoff document and display:
 ### Next Action
 <command>
 ```
+
+### Step 2b: Validate Referenced Files Exist
+
+After displaying the handoff summary, verify that all referenced files in the Context Index actually exist on disk:
+
+1. Read the plan file path from the handoff → verify it exists
+2. Read the spec file path from the handoff → verify it exists
+3. Read `status/claude-progress.json` → verify it exists
+
+**If any file is missing:**
+
+> "WARNING: Referenced files are missing:
+> - \<missing file path\>
+>
+> The project may be in an inconsistent state.
+>
+> Options:
+> 1. Continue anyway (may fail later)
+> 2. Run `/super-harness:status` to see what's available
+> 3. Start fresh with `/super-harness:brainstorm`"
+
+Wait for user choice and act accordingly.
+
+**If all files exist:** Proceed to Step 3.
 
 ### Step 3: Load Context from Index Pointers
 

@@ -1,4 +1,4 @@
-# super-harness v3.0.0
+# super-harness v3.1.0
 
 > **Built on [obra/superpowers](https://github.com/obra/superpowers)** — the agentic skills framework and software development methodology by Jesse Vincent. This project extends superpowers with cross-session milestone tracking, mandatory activity logging, an Orchestrator / Executor / Reviewer agent architecture, and dual-engine Codex integration. If you haven't seen superpowers, start there first.
 
@@ -343,77 +343,284 @@ flowchart LR
 
 ## How to Use
 
-### Starting a New Project
+### Project State Detection & Pre-flight
 
-**Step 1 — Brainstorm your idea:**
+Every `/super-harness:*` command runs a **pre-flight check** first (`scripts/harness-preflight`), which:
+
+1. Detects whether this is a **fresh project** (no `status/claude-progress.json`) or **existing project**
+2. Creates the harness directory structure automatically if missing:
+   - `status/` — milestone tracking
+   - `docs/harness/specs/` — design specs
+   - `docs/harness/plans/` — implementation plans
+   - `docs/harness/handoffs/` — session handoff documents
+   - `logs/` — activity logs
+3. Warns if not a git repository (git is required for activity logging and handoffs)
+4. For existing projects: validates that all referenced spec/plan files still exist on disk
+
+```
+User runs any /super-harness:* command
+         │
+         ▼
+┌─────────────────────────────────────┐
+│  harness-preflight                  │
+│                                     │
+│  Fresh project?                     │
+│    ├─ Yes → create all dirs + start │
+│    └─ No  → check dirs + validate   │
+│              referenced files        │
+└─────────────────────────────────────┘
+         │
+         ▼
+   Route to skill
+```
+
+### Three Usage Scenarios
+
+#### Scenario A: Brand New Project (first time using super-harness)
 
 ```
 /super-harness:brainstorm
+        │
+        ▼
+┌──────────────────────────────┐
+│  harness-preflight           │
+│  → creates dir structure      │
+│  → "Fresh project" message   │
+└──────────────────────────────┘
+        │
+        ▼
+┌──────────────────────────────┐
+│  harness-brainstorming       │
+│  → explore context           │
+│  → ask questions             │
+│  → propose approaches        │
+│  → write design spec         │
+│    docs/harness/specs/       │
+│    YYYY-MM-DD-<topic>-design │
+│  → you approve spec          │
+└──────────────────────────────┘
+        │
+        ▼
+┌──────────────────────────────┐
+│  harness-plan-writing        │
+│  → assess scale             │
+│  → small → single plan.md   │
+│  → large → claude-progress  │
+│    .json + milestone plans   │
+│  → write plan.md            │
+│  → you confirm plan          │
+└──────────────────────────────┘
+        │
+        ▼
+┌──────────────────────────────┐
+│  harness-handoff            │
+│  → creates handoff doc       │
+│  → /clear (your confirm)    │
+└──────────────────────────────┘
+        │
+        ▼
+New session → /super-harness:resume
+        │
+        ▼
+┌──────────────────────────────┐
+│  harness-execution           │
+│  → Orchestrator per-task:   │
+│    Executor → TDD Audit →   │
+│    Spec Review → Quality    │
+│  → activity-logging after   │
+│    each task                │
+│  → milestone done → handoff │
+└──────────────────────────────┘
+        │
+        ▼
+All done → harness-finishing
 ```
 
-The assistant will:
+#### Scenario B: Existing Project, First Time Using super-harness
 
-- Explore your project context (existing files, git history)
-- Offer the Visual Companion browser UI if the topic involves UI/architecture diagrams
-- Check if your request spans multiple subsystems (scope decomposition)
-- Ask clarifying questions one at a time
-- Propose 2-3 implementation approaches
-- Write a design spec to `docs/harness/specs/YYYY-MM-DD-<topic>-design.md`
-- Ask for your approval before moving on
-
-**Step 2 — Write the plan:**
-
-After approving the spec, the assistant will prompt:
-
-> "Spec approved. I suggest we now move to implementation planning. Continue? (yes/no)"
-
-Say yes, or run:
+The harness works in your existing repository alongside your existing code. No special setup needed.
 
 ```
-/super-harness:plan
+You run /super-harness:brainstorm (or /plan, or /execute)
+
+        │
+        ▼
+┌──────────────────────────────┐
+│  harness-preflight           │
+│  → detects existing project  │
+│  → creates missing dirs     │
+│  → warns if not git repo   │
+│  → validates referenced     │
+│    files exist              │
+└──────────────────────────────┘
+        │
+        ▼
+Same flow as Scenario A
+(brainstorm → plan → execute)
 ```
 
-The plan-writing skill will:
+**Key difference from Scenario A:**
+- The harness does NOT read or modify your existing source files during brainstorm/plan
+- Execution writes new files (the harness creates a branch via `harness-worktrees` before implementing)
+- Your existing code is always preserved
 
-- Assess project scale (small = single session, large = multi-milestone)
-- For large projects: create `status/claude-progress.json` with all milestones
-- Write a detailed plan with TDD steps (failing test → minimal code → verify pass) — no placeholders
-
-**Step 3 — Execute:**
-
-After plan is approved:
-
-> "Plan complete. Ready to execute? (yes/no)"
-
-Say yes, or run:
-
-```
-/super-harness:execute
-```
-
-The Orchestrator will:
-
-1. Check Codex availability (`/codex:setup`)
-2. At each stage, explicitly ask whether to use Claude subagent or Codex (no silent default)
-3. For each task, present four Decision Points:
-   - **Executor**: Claude subagent or `/codex:rescue`
-   - **TDD Audit** (mandatory gate): verifies RED-first, file order, non-hollow tests, coverage
-   - **Spec Review**: Claude subagent or `/codex:review`
-   - **Code Quality Review**: Claude subagent, `/codex:adversarial-review`, or both
-4. After milestone completion or every 5 consecutive tasks, invoke `harness:harness-handoff` to create a Handoff Document and trigger `/clear` for a fresh context
-
-### Resuming a Previous Session
+#### Scenario C: Resuming a Project (second+ time using super-harness)
 
 ```
 /super-harness:resume
+        │
+        ▼
+┌──────────────────────────────────────────────┐
+│  harness-entry (resume mode)                  │
+│                                              │
+│  1. Read current_session_handoff from         │
+│     status/claude-progress.json              │
+│     (authoritative — not glob)                │
+│                                              │
+│  2. Fall back to most recent file in          │
+│     docs/harness/handoffs/ if needed         │
+│                                              │
+│  3. Validate: spec + plan + progress          │
+│     files all exist                           │
+│                                              │
+│  4. Show handoff summary:                     │
+│     Status, Context Index,                    │
+│     Current Position,                         │
+│     Deferred Items, Key Decisions            │
+│                                              │
+│  5. Collect activity logs by session_id       │
+│     (across midnight if session spanned days) │
+└──────────────────────────────────────────────┘
+        │
+        ▼
+   Route by state:
+        │
+        ├── PLANNING  → harness-execution (start)
+        ├── IN_PROGRESS → harness-execution (resume task)
+        ├── MILESTONE_DONE → prompt: next milestone / finish
+        └── ALL_DONE  → prompt: finish / new project
 ```
 
-The assistant will:
+**Resume uses `current_session_handoff` (authoritative), not file timestamps.**
 
-- Read `status/claude-progress.json` and show milestone progress
-- Load any Handoff Document from `docs/harness/handoffs/` and display the session state summary
-- Read the activity log and highlight deferred items from the last session
-- Find the first incomplete milestone and either generate its plan or resume execution
+If the handoff file was manually deleted after the last session, resume falls back to the most recent remaining handoff and warns you.
+
+#### Scenario D: Adding a New Milestone to an Existing Project
+
+```
+/super-harness:plan
+        │
+        ▼
+┌──────────────────────────────┐
+│  harness-preflight           │
+│  → existing project          │
+│  → validates progress file   │
+└──────────────────────────────┘
+        │
+        ▼
+┌──────────────────────────────┐
+│  harness-plan-writing        │
+│  → reads claude-progress.json│
+│  → shows next incomplete     │
+│    milestone                │
+│  → asks: same milestone     │
+│    or add new one?          │
+│                              │
+│  If adding new milestone:   │
+│    harness-milestone add    │
+│    "title" [--spec <path>]  │
+│    → auto-inherits top-level │
+│      spec_file if not given  │
+│    → ID = milestone-N+1      │
+│  → writes new plan.md        │
+│  → old plan (if any) gets   │
+│    .deprecated-YYYY-MM-DD   │
+│    suffix                   │
+└──────────────────────────────┘
+        │
+        ▼
+┌──────────────────────────────┐
+│  harness-handoff → /clear    │
+└──────────────────────────────┘
+        │
+        ▼
+/super-harness:resume
+        │
+        ▼
+   harness-execution
+   for new milestone
+```
+
+---
+
+### Choosing Engines
+
+At each Decision Point, you'll see something like:
+
+```
+Task 3: Implement user authentication endpoint. Choose Executor engine:
+1. Claude subagent (default) — dispatches fresh subagent with TDD discipline
+2. Codex rescue — /codex:rescue with optional --model/--effort
+   (best for: previous BLOCKED, need faster/cheaper, late-session context degradation)
+
+Enter choice (1-2, default: 1):
+```
+
+**When to use Codex:**
+
+- Executor was previously BLOCKED on this task
+- You want a faster/cheaper model for mechanical tasks (`--model spark --effort medium`)
+- The Claude context has degraded across a long session
+- Security-sensitive code that benefits from adversarial Codex review
+- You want dual Code Quality Review for maximum confidence
+
+**Session-wide default:** At session start you can set a default engine for all roles, so Orchestrator won't ask per-task.
+
+---
+
+### Visual Companion (during brainstorming)
+
+When your topic involves UI design or architecture diagrams, the assistant will offer:
+
+> "This involves visual design. Would you like to see options in the browser? (yes/no)"
+
+If yes, a local server starts. Open the URL in your browser to see interactive mockups and option cards. Click to select — your choices are recorded and read by the assistant on the next turn.
+
+```bash
+# The server starts automatically. To stop manually:
+skills/harness-brainstorming/scripts/stop-server.sh $SESSION_DIR
+```
+
+Mockup files persist in `.harness/brainstorm/` (add `.harness/` to your `.gitignore`).
+
+---
+
+### Parallel Execution
+
+When multiple tasks are independent (no shared files, no sequential dependency), Orchestrator can dispatch them in parallel:
+
+> "Tasks 3 and 4 appear to be independent. Dispatch in parallel? (yes/no)"
+
+Each parallel Executor gets its own git worktree. After all complete review stages, Orchestrator checks for merge conflicts before integrating.
+
+---
+
+### Finishing a Branch
+
+After all tasks pass Code Quality Review, `harness-finishing` presents:
+
+```
+All N tasks complete and verified. How would you like to integrate?
+
+1. Merge locally  — merge branch into main/master right now
+2. Push and PR    — push branch and open a pull request
+3. Keep open      — leave the branch/worktree for later
+4. Discard        — abandon all work on this branch
+```
+
+Worktrees are cleaned up automatically after merge or PR.
+
+---
 
 ### Checking Project Status
 
@@ -569,6 +776,8 @@ super-harness/
     run-hook.sh                    # Cross-platform hook launcher
     session-start                  # Injects commands/context at session start
   scripts/
+    harness-preflight              # Pre-flight check (project state detection, dir creation, file validation)
+    harness-milestone             # Milestone management (init, add, set-plan, complete, list, next, status)
     bump-version.sh                # Version bump utility
   skills/
     harness-entry/SKILL.md         # Command routing + resume logic
@@ -596,7 +805,7 @@ super-harness/
     activity-logging/SKILL.md      # JSONL activity logging
     codex-integration/SKILL.md     # Codex operations manual
     progress-management/SKILL.md   # claude-progress.json CRUD
-  .claude-plugin/plugin.json       # Plugin manifest (v3.0.0)
+  .claude-plugin/plugin.json       # Plugin manifest (v3.1.0)
   .version-bump.json               # Files to update on version bump
   LICENSE                          # MIT
 ```
@@ -628,7 +837,7 @@ your-project/
 
 Both plugins can be installed simultaneously without conflict.
 
-| Feature                        | [superpowers](https://github.com/obra/superpowers) | super-harness v3.0.0                                  |
+| Feature                        | [superpowers](https://github.com/obra/superpowers) | super-harness v3.1.0                                  |
 | ------------------------------ | -------------------------------------------------- | ------------------------------------------------------------ |
 | Trigger                        | SessionStart hook                                  | Explicit `/super-harness:` commands                                |
 | Session scope                  | Single-session                                     | Multi-session milestone tracking                             |
