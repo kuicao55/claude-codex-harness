@@ -23,6 +23,7 @@ Available commands:
   /super-harness:resume      — Resume a previous session from handoff document
   /super-harness:handoff     — Package session state and clear context (normally called automatically)
   /super-harness:status      — Check current project and milestone status
+  /super-harness:init        — Generate project context from existing codebase (for existing projects, not new)
 
 Architecture:
   Orchestrator coordinates execution. Executor writes code (TDD). Two Reviewers audit independently.
