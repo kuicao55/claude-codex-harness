@@ -1,4 +1,4 @@
-# super-harness v3.1.0
+# super-harness v3.2.0
 
 > **Built on [obra/superpowers](https://github.com/obra/superpowers)** — the agentic skills framework and software development methodology by Jesse Vincent. This project extends superpowers with cross-session milestone tracking, mandatory activity logging, an Orchestrator / Executor / Reviewer agent architecture, and dual-engine Codex integration. If you haven't seen superpowers, start there first.
 
@@ -66,6 +66,53 @@ claude --plugin-dir ./super-harness
 ```
 
 Requires a ChatGPT subscription. After installation, restart Claude Code. If Codex is not installed, Orchestrator still asks you to confirm the engine each stage; only the Codex options are unavailable (Claude subagent remains).
+
+---
+
+## Quick Use
+
+### First time in a project
+
+```bash
+# 1. Generate project context (one-time per project)
+/super-harness:init
+
+# 2. Brainstorm a new feature or change
+/super-harness:brainstorm
+
+# 3. Create implementation plan
+/super-harness:plan
+
+# 4. Execute the plan (Orchestrator runs Executor → TDD Audit → Spec Review → Code Quality Review)
+#    Engine preferences are asked ONCE at start, then execution runs hands-off.
+/super-harness:execute
+```
+
+### Resume a previous session
+
+```bash
+# Resume from where you left off (loads handoff document, shows current position)
+/super-harness:resume
+```
+
+### Other useful commands
+
+| Command | Description |
+|---------|-------------|
+| `/super-harness:status` | Check current milestone and task progress |
+| `/super-harness:handoff` | Manually trigger session handoff (packages state + /clear) |
+| `/super-harness:tdd-audit` | Manually audit a completed task's TDD discipline |
+
+### What happens during execution?
+
+Each task goes through 4 stages:
+
+1. **Executor** — implements with TDD (write failing test first)
+2. **TDD Audit** — validates process compliance before review
+3. **Spec Review** — checks requirements compliance
+4. **Code Quality Review** — adversarial attack (security, perf, tests)
+
+Only Code Quality Review **PASS** closes a task. The Orchestrator never writes or reviews code directly — all work is dispatched to subagents.
 
 ---
 
@@ -848,7 +895,7 @@ super-harness/
     activity-logging/SKILL.md      # JSONL activity logging
     codex-integration/SKILL.md     # Codex operations manual
     progress-management/SKILL.md   # claude-progress.json CRUD
-  .claude-plugin/plugin.json       # Plugin manifest (v3.1.0)
+  .claude-plugin/plugin.json       # Plugin manifest (v3.2.0)
   .version-bump.json               # Files to update on version bump
   LICENSE                          # MIT
 ```
@@ -880,7 +927,7 @@ your-project/
 
 Both plugins can be installed simultaneously without conflict.
 
-| Feature                        | [superpowers](https://github.com/obra/superpowers) | super-harness v3.1.0                                  |
+| Feature                        | [superpowers](https://github.com/obra/superpowers) | super-harness v3.2.0                                  |
 | ------------------------------ | -------------------------------------------------- | ------------------------------------------------------------ |
 | Trigger                        | SessionStart hook                                  | Explicit `/super-harness:` commands                                |
 | Session scope                  | Single-session                                     | Multi-session milestone tracking                             |
