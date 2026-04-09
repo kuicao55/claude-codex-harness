@@ -71,25 +71,17 @@ Requires a ChatGPT subscription. After installation, restart Claude Code. If Cod
 
 ## Quick Use
 
-### First time in a project
+### Start a new feature
 
 ```bash
-# 1. Generate project context (one-time per project)
-/super-harness:init
-
-# 2. Brainstorm a new feature
-#    → After you approve the design spec, planning runs automatically
+# Brainstorm → design spec → plan → execute (all auto-triggered)
 /super-harness:brainstorm
-
-# 3. Plan is complete? Start execution
-#    → Engine preferences asked ONCE at start, then runs hands-off
-/super-harness:execute
 ```
 
-### Resume a previous session
+### Resume where you left off
 
 ```bash
-# Resume from where you left off (loads handoff document, shows current position)
+# Resume from handoff document, shows current position
 /super-harness:resume
 ```
 
@@ -97,8 +89,9 @@ Requires a ChatGPT subscription. After installation, restart Claude Code. If Cod
 
 | Command | Description |
 |---------|-------------|
-| `/super-harness:init` | Generate project context (run once per project) |
+| `/super-harness:init` | Generate/update project context (existing projects, not new features) |
 | `/super-harness:status` | Check current milestone and task progress |
+| `/super-harness:handoff` | Manually trigger session handoff (packages state + /clear) |
 
 ### What happens during execution?
 
