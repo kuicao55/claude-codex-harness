@@ -47,11 +47,18 @@ Then route to `harness:harness-brainstorming` with that context. No state check 
 
 ### If invoked via `/super-harness:plan`
 
-Route directly to `harness:harness-plan-writing`. No state check needed. The plan-writing skill handles scale assessment internally.
+**Pre-check:** Check if any design spec exists at `docs/harness/specs/`:
+- If **no spec exists**: Tell the user:
+  > "No design spec found. You should brainstorm first to create a spec.
+  > Run `/super-harness:brainstorm` to start."
+  Do not route further — wait for user to choose brainstorm.
+- If spec exists: Route directly to `harness:harness-plan-writing`. The plan-writing skill handles scale assessment internally.
 
 ### If invoked via `/super-harness:execute`
 
-**Execution gate (same as `commands/execute.md` and `harness-execution`):** Orchestrator does not implement or review code directly. Route to `harness:harness-execution` and follow its HARD-GATE: dispatch Executor and both reviewers (subagent or Codex), confirm engine with the user every stage, maintain TodoWrite from the start, and only close a task after Code Quality Review **PASS**.
+> **Recommendation:** Start from `/super-harness:brainstorm` for new features. Direct execution is only for resuming an existing plan.
+
+**Execution gate:** Orchestrator does not implement or review code directly. Route to `harness:harness-execution` and follow its HARD-GATE: dispatch Executor and both reviewers (subagent or Codex), confirm engine with the user every stage, maintain TodoWrite from the start, and only close a task after Code Quality Review **PASS**.
 
 Check if a plan file exists. Ask the user: "Which plan file should I execute? (Provide the path, or press Enter if there's only one plan in `docs/harness/plans/`)"
 

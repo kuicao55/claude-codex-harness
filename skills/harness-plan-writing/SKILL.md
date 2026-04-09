@@ -40,7 +40,19 @@ Every plan represents ONE milestone. A project may have multiple milestones.
 
 ---
 
-## Step 2: Initialize or Update Progress File
+## Step 2: Detect Project Name
+
+Before initializing, determine the project name:
+
+1. Try `git remote -v` — extract project name from the remote URL
+2. Fall back to `basename "$(pwd)"` — use the directory name as-is
+3. Confirm with user: "Project name detected as **\<name\>**. Use this? (yes/enter new name)"
+
+This mirrors the logic in `harness-init` Step 3 so both skills behave consistently.
+
+---
+
+## Step 3: Initialize or Update Progress File
 
 **Use the `harness-milestone` script for all milestone operations.** Do NOT manually edit `status/claude-progress.json`.
 
@@ -72,7 +84,7 @@ Every plan represents ONE milestone. A project may have multiple milestones.
 
 ---
 
-## Step 3: Write the Plan
+## Step 4: Write the Plan
 
 For the current milestone (the first `passed: false` entry):
 
@@ -85,7 +97,7 @@ For the current milestone (the first `passed: false` entry):
    Example: `harness-milestone set-plan milestone-1 docs/harness/plans/2026-04-09-milestone-1.md`
 4. Commit: `git add docs/harness/plans/ && git commit -m "harness: plan for milestone-1"`
 
-## Step 3b: Deprecate Old Plan (if re-planning)
+## Step 4b: Deprecate Old Plan (if re-planning)
 
 If the milestone already has a `plan_file` in `status/claude-progress.json`, you are **re-planning** it. The old plan file must be deprecated to avoid confusion:
 
