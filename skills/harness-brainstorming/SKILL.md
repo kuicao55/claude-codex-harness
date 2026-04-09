@@ -17,7 +17,12 @@ Do NOT invoke any implementation skill, write any code, scaffold any project, or
 
 You MUST create a task for each of these items and complete them in order:
 
+0. **Load PROJECT.md** — check if `status/PROJECT.md` exists
+   - If exists → read it and use as the primary context for project background
+   - If not exists → proceed to Step 1 (original explore behavior, unchanged)
 1. **Explore project context** — check existing files, docs, recent git commits
+   - Only dig into source files when PROJECT.md doesn't have enough detail for the current topic
+   - PROJECT.md is the primary source; Step 1 exploration is a fallback for detail
    1.5. **Offer visual companion** (if topic involves visual questions) — see `visual-companion.md`. Only start if topic is visual; skip for conceptual/textual questions.
 2. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
 3. **Scope assessment** — is this one project or multiple independent subsystems? If multiple, decompose immediately (see Scope Decomposition below)

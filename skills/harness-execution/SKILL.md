@@ -51,6 +51,19 @@ Read the plan file. If not specified, ask: "Which plan file should I execute? (p
 
 Review critically — identify questions or concerns. If the plan has critical gaps, raise them with the user before starting.
 
+### Step 1.x: Validate Plan File Exists
+
+After reading the plan file:
+1. Verify the plan file path exists on disk
+2. If not found → error:
+   > "Plan file not found: `<path>`
+   > The plan may have been deleted or moved.
+   > Options:
+   > 1. Run `/super-harness:plan` to re-create the plan
+   > 2. Check `/super-harness:status` to see current state"
+3. Verify all referenced spec files in the plan exist
+4. If spec missing → warn but allow proceed
+
 ### Step 2: Check Codex Availability
 
 Run `/codex:setup` to check if Codex is installed and authenticated.
@@ -59,21 +72,39 @@ Run `/codex:setup` to check if Codex is installed and authenticated.
 - If Codex is missing but npm is available → inform user: "Codex is not installed. `/codex:setup` can install it. Would you like to install now?"
 - If unavailable → set `codex_available = false`
 
-**When `codex_available = false`:** Do NOT silently skip user interaction. At each Decision Point (Executor, Spec Review, Code Quality Review), still ask the user explicitly, for example:
+### Step 3: Engine Pre-Configuration (One-time per execution session)
 
-> "Codex is not available for this session. For this stage, proceed with **Claude subagent only**? (yes/no)"
+**Announce:** "Collecting engine preferences for this execution session..."
 
-If the user says no, pause and resolve (install Codex, or abort the stage). Never infer "no Codex → skip asking" or "small project → run inline."
+Collect these preferences ONCE before starting. These apply to all subsequent tasks.
 
-**Project size:** Few tasks or a single session does **not** relax O/E/R. Every plan task still runs Executor → Spec Review → Code Quality Review with dispatch and user engine confirmation per stage.
+```
+Engine Configuration:
 
-### Step 3: Engine Confirmation Policy (Mandatory)
+1. Executor 引擎：
+   → 只能使用 Claude subagent（/codex:rescue 作为救援方案）
+   [无需选择，直接继续]
 
-For every task stage (Executor, Spec Review, Code Quality Review), Orchestrator MUST explicitly ask the user whether to use Codex or Claude subagent. No silent defaults.
+2. Executor 失败超过 N 次后切换 /codex:rescue：
+   → (1) 2 次  (2) 3 次  (3) 不切换（纯 Claude 模式）
+   → 默认：(1)
 
-You may remember the user's previous preference, but still ask for confirmation:
+3. Spec Review 引擎：
+   → (1) Claude subagent  (2) Codex review  (3) Both
+   → 默认：(1)
 
-> "Last stage used <engine>. Keep this choice for this stage? (yes/no)"
+4. Code Quality Review 引擎：
+   → (1) Claude subagent  (2) Codex adversarial-review  (3) Both
+   → 默认：(3)
+
+5. Codex 调用失败时：
+   → (1) Auto-fallback to Claude  (2) 询问用户
+   → 默认：(1)
+```
+
+**After pre-configuration, execution proceeds with 0 prompts per task** (except for BLOCKED scenarios — see below).
+
+**When `codex_available = false`:** Q3 and Q4 default to Claude subagent regardless of user's original choice. Q5 still applies.
 
 ### Step 4: Create Task List
 
@@ -123,26 +154,9 @@ If self-check fails:
 
 ### Step 1: Executor Decision Point
 
-Present to user (mandatory, no skip).
-
-**When `codex_available = true`:**
-
-> "**Task N: \<task name\>**
->
-> Choose Executor engine:
->
-> 1. Claude subagent — dispatches fresh subagent with TDD discipline
-> 2. Codex rescue — `/codex:rescue` with optional `--model`/`--effort`
->    (best for: previous BLOCKED, need faster/cheaper, late-session context degradation)"
-
-**When `codex_available = false`:** Codex is not offered, but you MUST still ask:
-
-> "**Task N: \<task name\>** — Codex is unavailable. Proceed with **Claude subagent** Executor only? (yes/no)"
-
-**If Claude subagent chosen (or user confirms subagent-only):**
+**Using pre-configured engine:** Claude subagent (as configured in Step 3)
 
 Dispatch using Task/Subagent tooling with `executor-prompt.md` template. Provide:
-
 - Full task text (never make Executor read the plan file)
 - Scene-setting context: prior tasks built, architecture decisions, key files
 - Working directory
@@ -154,7 +168,22 @@ Handle Executor status:
 | `DONE`               | Proceed to Decision Point 1.5: TDD Audit                                                         |
 | `DONE_WITH_CONCERNS` | Read concerns. If they affect correctness or scope, address before proceeding. Otherwise proceed to Decision Point 1.5: TDD Audit |
 | `NEEDS_CONTEXT`      | Provide missing information and re-dispatch Executor                                              |
-| `BLOCKED`            | Go to Codex Rescue Decision Point (if `codex_available`) or escalate to user                      |
+| `BLOCKED`            | **Immediately** show /codex:rescue as Option 2 (no waiting for N failures)                     |
+
+**BLOCKED: Always show rescue option (regardless of N setting):**
+
+> "**Executor is blocked on Task N:** \<reason\>
+>
+> Options:
+>
+> 1. Retry with Claude subagent (provide more context)
+> 2. Use `/codex:rescue` — **always available when BLOCKED**, no need to wait for N failures"
+>
+> - Option 1: gather context, re-dispatch Claude subagent
+> - Option 2: output `/codex:rescue <task> --background [--model X] [--effort Y]` (do NOT use Bash(codex ...))
+
+**N consecutive failures (non-BLOCKED):** After N consecutive `DONE_WITH_CONCERNS` or re-dispatch failures, prompt:
+> "Task N has had N executor failures. Switch to `/codex:rescue` for a fresh perspective?"
 
 ### Decision Point 1.5: TDD Audit
 
@@ -196,43 +225,12 @@ Format and send using `codex-review-prompt.md` rescue template. Then:
 4. Map Codex output to Executor report format (see `codex-review-prompt.md`) and continue as dispatched Executor output
 5. Proceed to Spec Review Decision Point
 
-### Codex Rescue Decision Point (Claude Executor BLOCKED)
-
-Only shown when `codex_available = true` and Claude subagent Executor reports BLOCKED:
-
-> "**Executor is blocked on Task N:** \<reason\>
->
-> Options:
->
-> 1. Provide more context and retry with Claude subagent
-> 2. Use `/codex:rescue` to delegate to Codex
->    - Default model: `--background`
->    - Faster/cheaper: `--model spark --effort medium --background`
->    - Deeper reasoning: `--model gpt-5.4-mini --effort xhigh --background`
-> 3. Skip this task and flag as BLOCKED (not recommended)"
-
-- Option 1: gather context, re-dispatch Claude subagent Executor
-- Option 2: output slash command `/codex:rescue <task> --background [--model X] [--effort Y]` (do NOT use Bash(codex ...))
-- Option 3: log task as BLOCKED in activity log, continue to next task
-
 ### Step 2: Spec Review Decision Point
 
-Present to user after Executor completes (mandatory, no skip).
-
-**When `codex_available = true`:**
-
-> "**Executor completed Task N.** Choose Spec Reviewer engine:
->
-> 1. Claude subagent — fresh subagent verifies spec compliance
-> 2. Codex review — `/codex:review` (standard read-only, not directable)
->    Token cost: moderate
-> 3. Skip Spec Review (not recommended)"
-
-**When `codex_available = false`:** Still ask; do not default to inline review:
-
-> "**Executor completed Task N.** Codex is unavailable. Proceed with **Claude subagent** Spec Review only? (yes/no)"
-
-**If Claude subagent chosen:**
+**Using pre-configured engine from Q3:**
+- Claude subagent → dispatch Task/Subagent with `spec-reviewer-prompt.md`
+- Codex review → output `/codex:review --background`
+- Both → dispatch both simultaneously
 
 Dispatch using Task/Subagent tooling and `spec-reviewer-prompt.md` template. Provide:
 
@@ -244,17 +242,8 @@ Handle Spec Reviewer verdict:
 
 | Verdict          | Action                                                               |
 | ---------------- | -------------------------------------------------------------------- |
-| `SPEC_COMPLIANT` | Proceed to Code Quality Review Decision Point                        |
+| `SPEC_COMPLIANT` | Proceed to Step 3: Code Quality Review Decision Point               |
 | `SPEC_ISSUES`    | Return to Step 1 — dispatch Executor to fix, then re-run Spec Review |
-
-**If Codex review chosen:**
-
-**IMPORTANT: Do NOT use `Bash(codex ...)`**. The `/codex:review` command is a **slash command** provided by the codex-plugin-cc plugin — it must be output as text for Claude Code to dispatch internally. Never invoke it as a bash command.
-
-1. Output the slash command directly: `/codex:review --background` (or `--base main --background` if in worktree)
-2. Poll with `/codex:status` → retrieve with `/codex:result`
-3. Map output to SPEC_COMPLIANT / SPEC_ISSUES (see `codex-review-prompt.md`)
-4. Continue accordingly
 
 **Spec Review re-try limit:** If Spec Review has failed 3 times, escalate to user:
 
@@ -266,22 +255,10 @@ Handle Spec Reviewer verdict:
 
 ### Step 3: Code Quality Review Decision Point
 
-Present to user after Spec Review passes (mandatory, no skip).
-
-**When `codex_available = true`:**
-
-> "**Spec Review passed. Task N ready for Code Quality Review.** Choose engine:
->
-> 1. Claude subagent — adversarial attack on security, performance, tests
-> 2. Codex adversarial — `/codex:adversarial-review` (directable, higher token cost)
->    Good for: security-sensitive code, auth, payments, data access
-> 3. Both — Claude subagent + Codex dual review (maximum quality)"
-
-**When `codex_available = false`:** Still ask:
-
-> "**Spec Review passed. Task N ready for Code Quality Review.** Codex is unavailable. Proceed with **Claude subagent** Code Quality Review only? (yes/no)"
-
-**If Claude subagent chosen:**
+**Using pre-configured engine from Q4:**
+- Claude subagent → dispatch Task/Subagent with `code-quality-reviewer-prompt.md`
+- Codex adversarial-review → output `/codex:adversarial-review --background`
+- Both → dispatch both simultaneously, collect results
 
 Dispatch using Task/Subagent tooling and `code-quality-reviewer-prompt.md` template. Provide:
 
@@ -296,23 +273,15 @@ Handle verdict:
 | `PASS`  | Task complete — proceed to Post-Task                                        |
 | `FAIL`  | Return to Step 1 — dispatch Executor to fix, then re-run both review stages |
 
-**If Codex adversarial-review chosen:**
-
-**IMPORTANT: Do NOT use `Bash(codex ...)`**. The `/codex:adversarial-review` command is a **slash command** provided by the codex-plugin-cc plugin — it must be output as text for Claude Code to dispatch internally. Never invoke it as a bash command.
-
-1. Output the slash command directly: `/codex:adversarial-review --background [focus text if applicable]`
-2. Poll with `/codex:status` → retrieve with `/codex:result`
-3. Map output to PASS / FAIL (see `codex-review-prompt.md`)
-4. Continue accordingly
-
 **If both chosen:**
+1. Collect both results
+2. If either returns FAIL → combined verdict is FAIL
+3. Merge all findings into consolidated report
+4. Both PASS → proceed to Post-Task
 
-1. Dispatch Claude subagent with `code-quality-reviewer-prompt.md` simultaneously
-2. Output the slash command directly: `/codex:adversarial-review --background`
-3. Collect both results
-4. If either returns FAIL → combined verdict is FAIL
-5. Merge all findings into consolidated report
-6. Both PASS → proceed to Post-Task
+**Q5 Fallback (Codex failure):**
+- If Q5 = Auto-fallback: automatically use Claude subagent without prompting
+- If Q5 = Ask: prompt user "Codex failed. Retry with Claude subagent?"
 
 ### Dispatch Validation Checklist (Run per task)
 

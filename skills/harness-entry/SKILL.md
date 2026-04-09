@@ -25,7 +25,6 @@ harness-preflight
 | Existing project | Resuming or adding milestones | Display current milestone and status |
 | Git not initialized | Warning | "WARNING: This is not a git repository. Git is required for activity logging and handoffs to work properly." |
 | Missing directories | Auto-created | "Created missing directories: ..." |
-| Referenced files missing | Warning with list | Show which spec/plan files are missing |
 
 **Do NOT proceed with any routing until pre-flight check completes.**
 
@@ -69,6 +68,10 @@ Route to `harness:harness-handoff`. This skill packages the current session stat
 ### If invoked via `/super-harness:tdd-audit`
 
 Route to `harness:harness-tdd-audit`. This skill is typically called by Orchestrator internally after Executor reports DONE. It can also be triggered manually to audit a completed task. Requires Executor report + file list as input.
+
+### If invoked via `/super-harness:init`
+
+Route to `harness:harness-init`. This skill reads the entire codebase and generates `status/PROJECT.md`. Run once per project to establish project context for future sessions.
 
 ### If invoked via `/super-harness:resume`
 

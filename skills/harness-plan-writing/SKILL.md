@@ -1,35 +1,42 @@
 ---
 name: harness-plan-writing
-description: "Scale-aware implementation planning for super-harness. Assesses project scope, manages claude-progress.json for large projects, and generates detailed session plan.md files following TDD discipline."
+description: "Implementation planning for super-harness. Creates milestone plans with TDD discipline. Every project must have at least one milestone — milestone is the structural foundation for long-term tracking."
 ---
 
 # Harness Plan-Writing
 
-Write implementation plans with full TDD discipline. For large projects, manage cross-session milestone tracking via `claude-progress.json`. For small projects, produce a single plan.md using the standard superpowers approach.
+Write implementation plans with full TDD discipline. All projects use milestone tracking — there is no "small project" exception. A milestone is the structural foundation for long-term tracking + short-term execution, regardless of size.
 
 **Announce at start:** "I'm using the harness-plan-writing skill to create the implementation plan."
 
 ## Step 1: Project Scope Assessment
 
-Before writing any plan, assess the project scope:
+Before writing any plan, assess the milestone scope:
 
 **Ask yourself (or confirm with the user if unclear):**
 
-- How many distinct features or components need to be built?
-- How many implementation tasks are roughly required?
-- Does this cross multiple modules, services, or layers?
-- Will this realistically require more than one session to complete?
+- How many implementation tasks does this milestone have?
+- How many sessions will this milestone reasonably require?
 
-Every plan represents ONE milestone. A project may have multiple milestones.
+**Milestone Splitting Rule:**
+
+Every milestone should be completable within one session. Estimate:
+- Each task needs ~1-2 Executor runs in the best case
+- Account for failures and retries
+- **Recommended: 3-5 tasks per milestone**
+- If a milestone has >5 tasks, suggest splitting into two milestones
+- If a milestone has only 1 task, that is fine — every project must have at least one milestone
 
 **Decision:**
 
-| Criteria                                                     | Classification |
-| ------------------------------------------------------------ | -------------- |
-| Single milestone, one session                                 | One milestone  |
-| Multiple milestones, multiple sessions                       | Multi-milestone |
+| Condition | Action |
+|-----------|--------|
+| 1 task | Create milestone-1 with 1 task (valid) |
+| 2-5 tasks | One milestone is fine |
+| >5 tasks | Suggest splitting into multiple milestones |
+| Unsure | Ask user: "Would you like to split this into multiple milestones?" |
 
-If unsure, ask the user: "Would you like to split this into multiple milestones? (yes/no)"
+Every plan represents ONE milestone. A project may have multiple milestones.
 
 ---
 
@@ -108,7 +115,7 @@ Every plan — small or large — MUST start with this header:
 
 **Goal:** [One sentence describing what this builds]
 
-**Milestone ref:** [milestone-N from claude-progress.json, or "standalone" for small projects]
+**Milestone ref:** milestone-N from claude-progress.json
 
 **Architecture:** [2-3 sentences about approach]
 

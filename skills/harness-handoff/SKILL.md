@@ -109,6 +109,22 @@ Save to: `docs/harness/handoffs/YYYY-MM-DD-HH-MM.md`
 
 3. If state is `ALL_DONE`: no additional changes needed
 
+### Step 4b: Update PROJECT.md (on MILESTONE_DONE only)
+
+If state is `MILESTONE_DONE`, update `status/PROJECT.md` to record this milestone completion:
+
+1. Read existing `status/PROJECT.md`
+2. Add a row to `Completed Milestones` table:
+   ```
+   | milestone-N | <title> | <task-count> | <YYYY-MM-DD> |
+   ```
+3. If the completed milestone added new functional modules → add them to Functional Modules table (append, don't delete existing)
+4. Update `Last Updated` field to today's date
+5. Write updated PROJECT.md
+6. Commit: `git add status/PROJECT.md && git commit -m "harness: update project context after milestone-N"`
+
+**Note:** This updates (appends to) the file, not overwrites. Existing modules are preserved.
+
 ## Step 5: Confirm with User
 
 Show the handoff document summary and ask:
