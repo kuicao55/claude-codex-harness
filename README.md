@@ -507,6 +507,46 @@ If the handoff file was manually deleted after the last session, resume falls ba
 
 #### Scenario D: Adding a New Milestone to an Existing Project
 
+Two entry points depending on whether you need to design a new feature or already know what to build:
+
+**Path 1 — Design first (brainstorm):**
+```
+/super-harness:brainstorm
+        │
+        ▼
+┌──────────────────────────────┐
+│  harness-brainstorming       │
+│  → explore + design new      │
+│    feature spec              │
+│  → write to NEW spec file    │
+│    docs/harness/specs/       │
+│    YYYY-MM-DD-<topic>-design │
+│  → you approve spec          │
+└──────────────────────────────┘
+        │
+        ▼
+┌──────────────────────────────┐
+│  harness-plan-writing        │
+│  → harness-milestone add     │
+│    "title" --spec <new-spec> │
+│    → ID = milestone-N+1      │
+│  → writes new plan.md        │
+│  → links plan to milestone   │
+└──────────────────────────────┘
+        │
+        ▼
+┌──────────────────────────────┐
+│  harness-handoff → /clear    │
+└──────────────────────────────┘
+        │
+        ▼
+/super-harness:resume
+        │
+        ▼
+   harness-execution
+```
+
+**Path 2 — Plan directly (feature already designed):**
 ```
 /super-harness:plan
         │
@@ -514,21 +554,20 @@ If the handoff file was manually deleted after the last session, resume falls ba
 ┌──────────────────────────────┐
 │  harness-preflight           │
 │  → existing project          │
-│  → validates progress file   │
+│  → validates progress file    │
 └──────────────────────────────┘
         │
         ▼
 ┌──────────────────────────────┐
 │  harness-plan-writing        │
-│  → reads claude-progress.json│
 │  → shows next incomplete     │
-│    milestone                │
-│  → asks: same milestone     │
-│    or add new one?          │
+│    milestone (if any)        │
+│  → asks: continue same or   │
+│    add new milestone?        │
 │                              │
 │  If adding new milestone:   │
 │    harness-milestone add    │
-│    "title" [--spec <path>]  │
+│    "title" [--spec <path>]   │
 │    → auto-inherits top-level │
 │      spec_file if not given  │
 │    → ID = milestone-N+1      │
@@ -548,8 +587,12 @@ If the handoff file was manually deleted after the last session, resume falls ba
         │
         ▼
    harness-execution
-   for new milestone
 ```
+
+**Key behaviors for Path 2:**
+- `--spec <path>` is optional — if omitted, the new milestone inherits the project's top-level `spec_file`
+- If the milestone already has a plan (re-planning), the old plan gets `.deprecated-YYYY-MM-DD` suffix and is committed
+- If two milestones somehow reference the same plan file, `harness-milestone set-plan` exits with an error
 
 ---
 
