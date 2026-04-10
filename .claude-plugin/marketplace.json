@@ -1,0 +1,24 @@
+{
+  "name": "local-super-harness",
+  "owner": {
+    "name": "kuicao55"
+  },
+  "plugins": [
+    {
+      "name": "super-harness",
+      "source": {
+        "source": "directory",
+        "path": "."
+      },
+      "description": "Structured development workflow with Orchestrator / Executor / Reviewer architecture, cross-session progress tracking, activity logging, Visual Companion, and dual-engine Codex integration",
+      "version": "3.2.5",
+      "author": {
+        "name": "kuicao55"
+      },
+      "homepage": "https://github.com/kuicao55/super-harness",
+      "repository": "https://github.com/kuicao55/super-harness",
+      "license": "MIT",
+      "keywords": ["workflow", "tdd", "progress-tracking", "codex", "orchestrator", "executor", "reviewer", "visual-companion"]
+    }
+  ]
+}
