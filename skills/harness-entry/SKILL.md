@@ -11,10 +11,26 @@ This skill handles the entry point for all `/super-harness:` commands. It establ
 
 ## Pre-flight Check
 
-Before routing, run `harness-preflight` to establish project state:
+Before routing, establish project state with these Bash commands:
 
 ```bash
-scripts/harness-preflight
+# Check if git repository
+if ! git rev-parse --git-dir >/dev/null 2>&1; then
+  echo "WARNING: Not a git repository. Activity logging and handoffs require git."
+fi
+
+# Check if progress file exists
+if [[ -f "status/claude-progress.json" ]]; then
+  # Existing project - read current milestone
+  CURRENT_MILESTONE=$(grep -o '"id"' status/claude-progress.json | head -1)
+  echo "Existing project detected. Current milestone: $CURRENT_MILESTONE"
+else
+  # Fresh project - create directory structure
+  echo "Fresh project detected. Creating directory structure..."
+  mkdir -p status docs/harness/specs docs/harness/plans docs/harness/handoffs logs
+  echo "Created: status/, docs/harness/specs/, docs/harness/plans/, docs/harness/handoffs/, logs/"
+  echo "Ready to start. Run /super-harness:brainstorm or /super-harness:plan to begin."
+fi
 ```
 
 **Interpretation:**
@@ -32,8 +48,8 @@ scripts/harness-preflight
 
 Before routing, establish these two skills as active cross-cutting concerns for this session:
 
-- `harness:progress-management` — will be invoked whenever `claude-progress.json` must be read or written
-- `harness:activity-logging` — will be invoked after every completed task
+- `progress-management` — will be invoked whenever `claude-progress.json` must be read or written
+- `activity-logging` — will be invoked after every completed task
 
 ## Routing Logic
 

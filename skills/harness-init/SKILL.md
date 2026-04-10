@@ -19,7 +19,8 @@ Generate a comprehensive `status/PROJECT.md` by reading the entire codebase.
 ### Step 1: Run Pre-flight Check
 
 ```bash
-scripts/harness-preflight
+# Ensure directories exist before generating context
+mkdir -p status docs/harness/specs docs/harness/plans docs/harness/handoffs logs 2>/dev/null || true
 ```
 
 Ensure directories exist before generating context.

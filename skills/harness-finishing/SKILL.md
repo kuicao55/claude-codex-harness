@@ -181,12 +181,12 @@ git branch
 
 After successful merge or PR creation:
 
-1. Invoke `harness:progress-management` to mark the current milestone as passed:
+1. Invoke `progress-management` to mark the current milestone as passed:
    - Set `passed: true`
    - Set `session_date` to today
    - Update `updated_at` timestamp
 
-2. Invoke `harness:activity-logging` to record the branch completion event.
+2. Invoke `activity-logging` to record the branch completion event.
 
 3. Display completion summary:
 

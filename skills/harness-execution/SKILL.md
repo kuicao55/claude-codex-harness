@@ -213,7 +213,7 @@ Orchestrator calls `harness:tdd-audit` with:
 > 2. Simplify or re-scope this task
 > 3. Skip and flag for later"
 
-After escalation, invoke `harness:activity-logging` with the PROCESS_VIOLATION count.
+After escalation, invoke `activity-logging` with the PROCESS_VIOLATION count.
 
 **If Codex rescue chosen:**
 
@@ -317,7 +317,7 @@ Update activity log with failure count and final decision regardless of outcome.
 
 After Code Quality Review PASS:
 
-1. **Invoke `harness:activity-logging`** — record task completion with:
+1. **Invoke `activity-logging`** — record task completion with:
    - `executor_engine`: `claude-subagent` or `codex-rescue`
    - `reviewer_engine`: `claude-subagent`, `codex-review`/`codex-adversarial-review`
    - `codex_session_id`: session-id from `/codex:result` (if Codex was used)
@@ -418,8 +418,8 @@ As each sub-step starts/completes:
 
 **Skills used by this skill:**
 
-- `harness:activity-logging` — mandatory after every task
-- `harness:progress-management` — to mark milestones passed
+- `activity-logging` — mandatory after every task
+- `progress-management` — to mark milestones passed
 - `harness-handoff` — session boundary handoff (on milestone complete, all done, or context threshold)
 - `harness-debugging` — when full test suite fails after all tasks complete
 - `harness-verification` — before marking work complete
