@@ -43,7 +43,7 @@ If the user has not already provided the concrete feature/problem context, ask f
 
 > "这次要 brainstorm 的具体功能或问题是什么？请尽量描述目标、当前现象和期望结果。"
 
-Then route to `harness:harness-brainstorming` with that context. No state check needed.
+Then route to `harness-brainstorming` with that context. No state check needed.
 
 ### If invoked via `/super-harness:plan`
 
@@ -52,17 +52,17 @@ Then route to `harness:harness-brainstorming` with that context. No state check 
   > "No design spec found. You should brainstorm first to create a spec.
   > Run `/super-harness:brainstorm` to start."
   Do not route further — wait for user to choose brainstorm.
-- If spec exists: Route directly to `harness:harness-plan-writing`. The plan-writing skill handles scale assessment internally.
+- If spec exists: Route directly to `harness-plan-writing`. The plan-writing skill handles scale assessment internally.
 
 ### If invoked via `/super-harness:execute`
 
 > **Recommendation:** Start from `/super-harness:brainstorm` for new features. Direct execution is only for resuming an existing plan.
 
-**Execution gate:** Orchestrator does not implement or review code directly. Route to `harness:harness-execution` and follow its HARD-GATE: dispatch Executor and both reviewers (subagent or Codex), confirm engine with the user every stage, maintain TodoWrite from the start, and only close a task after Code Quality Review **PASS**.
+**Execution gate:** Orchestrator does not implement or review code directly. Route to `harness-execution` and follow its HARD-GATE: dispatch Executor and both reviewers (subagent or Codex), confirm engine with the user every stage, maintain TodoWrite from the start, and only close a task after Code Quality Review **PASS**.
 
 Check if a plan file exists. Ask the user: "Which plan file should I execute? (Provide the path, or press Enter if there's only one plan in `docs/harness/plans/`)"
 
-Then route to `harness:harness-execution` with the specified plan.
+Then route to `harness-execution` with the specified plan.
 
 ### If invoked via `/super-harness:status`
 
@@ -70,15 +70,15 @@ Display status as defined in the `commands/status.md` command. Do not route furt
 
 ### If invoked via `/super-harness:handoff`
 
-Route to `harness:harness-handoff`. This skill packages the current session state into a Handoff Document and triggers `/clear` for a fresh context. Supports plan completion, milestone completion, and manual invocation.
+Route to `harness-handoff`. This skill packages the current session state into a Handoff Document and triggers `/clear` for a fresh context. Supports plan completion, milestone completion, and manual invocation.
 
 ### If invoked via `/super-harness:tdd-audit`
 
-Route to `harness:harness-tdd-audit`. This skill is typically called by Orchestrator internally after Executor reports DONE. It can also be triggered manually to audit a completed task. Requires Executor report + file list as input.
+Route to `harness-tdd-audit`. This skill is typically called by Orchestrator internally after Executor reports DONE. It can also be triggered manually to audit a completed task. Requires Executor report + file list as input.
 
 ### If invoked via `/super-harness:init`
 
-Route to `harness:harness-init`. This skill reads the entire codebase and generates `status/PROJECT.md`. Run once per project to establish project context for future sessions.
+Route to `harness-init`. This skill reads the entire codebase and generates `status/PROJECT.md`. Run once per project to establish project context for future sessions.
 
 ### If invoked via `/super-harness:resume`
 
@@ -174,11 +174,11 @@ Inject all relevant context into the Orchestrator's initial context.
 
 **If state is PLANNING:**
 > "Plan was written in the previous session. Ready to start execution."
-Route to `harness:harness-execution` with the plan.
+Route to `harness-execution` with the plan.
 
 **If state is IN_PROGRESS:**
 > "Resuming from Task \<N\>. Ready to continue execution."
-Route to `harness:harness-execution` with the plan and current task context.
+Route to `harness-execution` with the plan and current task context.
 
 **If state is MILESTONE_DONE:**
 > "Milestone complete! What's next?

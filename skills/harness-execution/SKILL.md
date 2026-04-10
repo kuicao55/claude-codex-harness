@@ -335,11 +335,11 @@ After Code Quality Review PASS:
    - If this is the last task of the milestone → use state `MILESTONE_DONE` instead, proceed to step 4
 4. **Check if milestone is complete** — if ALL tasks in current milestone are `- [x]`:
    - Prompt user "All tasks in this milestone are complete and Code Quality Review approved.
-   - If confirmed: invoke `harness:harness-handoff` with state=`MILESTONE_DONE`
+   - If confirmed: invoke `harness-handoff` with state=`MILESTONE_DONE`
 5. **Context Reset Check — Consecutive Task Threshold:**
    - Track the number of consecutive tasks completed without a context reset
    - After 5 consecutive tasks: prompt user "You've completed 5 consecutive tasks without a context reset. Context may be degrading. Reset now to preserve clarity? (yes/no)"
-   - If yes: invoke `harness:harness-handoff` with state=`IN_PROGRESS` (preserves current position)
+   - If yes: invoke `harness-handoff` with state=`IN_PROGRESS` (preserves current position)
    - Reset counter after each reset
 6. Announce: "Task N complete. Moving to Task N+1."
 7. Mark current task `completed` and next task `in_progress` in TodoWrite
@@ -370,12 +370,12 @@ As each sub-step starts/completes:
 
    > "Running full test suite to verify all tasks integrate correctly..."
 
-   If tests fail: stop and debug using `harness:harness-debugging` before claiming completion.
-   Apply `harness:harness-verification` before marking work done.
+   If tests fail: stop and debug using `harness-debugging` before claiming completion.
+   Apply `harness-verification` before marking work done.
 
-2. **Invoke `harness:harness-handoff`** with state=`ALL_DONE` — this marks the project complete in the handoff document.
+2. **Invoke `harness-handoff`** with state=`ALL_DONE` — this marks the project complete in the handoff document.
 
-3. **Invoke `harness:harness-finishing`** — guides branch completion:
+3. **Invoke `harness-finishing`** — guides branch completion:
    - Verifies tests pass
    - Presents 4 options: merge locally / push + PR / keep / discard
    - Handles worktree cleanup
@@ -403,7 +403,7 @@ As each sub-step starts/completes:
 
 ## Red Flags — STOP
 
-- Starting implementation on `main`/`master` without explicit user consent (use `harness:harness-worktrees`)
+- Starting implementation on `main`/`master` without explicit user consent (use `harness-worktrees`)
 - Proceeding to next task while Code Quality Review has open issues
 - Trusting Executor self-review instead of running both Reviewers
 - Letting Executor write production code before a failing test exists
@@ -420,9 +420,9 @@ As each sub-step starts/completes:
 
 - `harness:activity-logging` — mandatory after every task
 - `harness:progress-management` — to mark milestones passed
-- `harness:harness-handoff` — session boundary handoff (on milestone complete, all done, or context threshold)
-- `harness:harness-debugging` — when full test suite fails after all tasks complete
-- `harness:harness-verification` — before marking work complete
-- `harness:harness-finishing` — after all tasks complete, to handle branch and worktree
+- `harness-handoff` — session boundary handoff (on milestone complete, all done, or context threshold)
+- `harness-debugging` — when full test suite fails after all tasks complete
+- `harness-verification` — before marking work complete
+- `harness-finishing` — after all tasks complete, to handle branch and worktree
 - Subagent templates: `executor-prompt.md`, `spec-reviewer-prompt.md`, `code-quality-reviewer-prompt.md`
 - Codex templates: `codex-review-prompt.md`

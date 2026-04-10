@@ -36,7 +36,7 @@ A Claude Code skill plugin for structured, long-running software development pro
 | **Activity logging**                | Every completed task logged to `logs/activity-YYYY-MM-DD.jsonl` — engine used, Codex session IDs, review verdicts, deferred items, PROCESS_VIOLATION events.                           |
 | **Visual Companion**                | Optional browser UI during brainstorming for mockups, architecture diagrams, and design option cards.                                                                                |
 | **TDD Process Enforcement**         | Mandatory TDD Audit gate, Rationalization Counter-Tables, Red Flags STOP rules, Regression Test Validation Pattern, PROCESS_VIOLATION status for TDD violations.                        |
-| **Session Handoffs**                | `harness:harness-handoff` creates Handoff Documents (`docs/harness/handoffs/`). `/super-harness:resume` loads them. Context resets on milestone completion or after 5 consecutive tasks.        |
+| **Session Handoffs**                | `harness-handoff` creates Handoff Documents (`docs/harness/handoffs/`). `/super-harness:resume` loads them. Context resets on milestone completion or after 5 consecutive tasks.        |
 
 ---
 
@@ -134,7 +134,7 @@ Use this to confirm a `/super-harness:execute` run actually followed the harness
 6. **PROCESS_VIOLATION** — If TDD violations were detected, tasks were returned to Executor with PROCESS_VIOLATION status, not pushed through.
 7. **TodoWrite** — A live todo list was updated across sub-steps (Executor → TDD Audit → Spec → Quality → Logging), not only plan markdown checkboxes.
 8. **Activity logging** — After each completed task, `harness:activity-logging` was invoked with engines, verdicts, and any PROCESS_VIOLATION events.
-9. **Context Reset** — After milestone completion or every 5 consecutive tasks, `harness:harness-handoff` was invoked to create a Handoff Document and trigger `/clear`.
+9. **Context Reset** — After milestone completion or every 5 consecutive tasks, `harness-handoff` was invoked to create a Handoff Document and trigger `/clear`.
 10. **Orchestrator Self-Check** — At each Decision Point, Orchestrator verified it was not writing code, not doing Executor work, and not reviewing inline.
 
 Strict O/E/R adds turns and latency by design; that is expected when compliance matters.
@@ -253,7 +253,7 @@ If ANY box is unchecked → log PROCESS_VIOLATION, stop, correct before continui
 │    → update plan checkbox [x]                                           │
 │    → check milestone completion                                         │
 │    → Context Reset: milestone done OR 5 consecutive tasks →            │
-│      harness:harness-handoff (Handoff Document + /clear)                    │
+│      harness-handoff (Handoff Document + /clear)                    │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -309,9 +309,9 @@ flowchart TD
     F8 --> F9{Milestone done?}
     F9 -->|no| F9b{5 tasks since reset?}
     F9b -->|no| F10{More tasks?}
-    F9b -->|yes| F11[harness:harness-handoff → Handoff + /clear]
+    F9b -->|yes| F11[harness-handoff → Handoff + /clear]
     F11 --> F
-    F9 -->|yes| F12[harness:harness-handoff → Handoff + /clear]
+    F9 -->|yes| F12[harness-handoff → Handoff + /clear]
     F10 -->|yes| F
     F10 -->|no| G["harness-verification: run full test suite"]
     G --> H["harness-finishing: 4 integration options"]
@@ -778,21 +778,21 @@ Worktrees are cleaned up automatically after merge or PR.
 
 | Skill                               | Description                                                                                     |
 | ----------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `harness:harness-entry`             | Command routing and resume logic. Reads activity log and Handoff Documents on resume.          |
-| `harness:harness-brainstorming`     | Structured brainstorming: scope decomposition, Visual Companion, design spec writing.           |
-| `harness:harness-plan-writing`      | Scale-aware planning. Small: single plan. Large: `claude-progress.json` + per-milestone plan. TDD_EVIDENCE field required per task. |
-| `harness:harness-execution`         | Orchestrator: 4 Decision Points per task (Executor → TDD Audit → Spec Review → Code Quality Review), Orchestrator self-check, context reset triggers, activity logging. |
-| `harness:harness-debugging`         | 4-phase root cause investigation (identify → pattern analysis → hypothesis → fix).              |
-| `harness:harness-verification`      | Evidence-before-completion gate: IDENTIFY → RUN → READ → VERIFY → CLAIM.                        |
-| `harness:harness-tdd`               | TDD reference: Red-Green-Refactor, Rationalization Counter-Tables, Red Flags STOP rules, Regression Test Validation Pattern. |
-| `harness:harness-worktrees`         | Git worktree setup before implementation, baseline test verification, cleanup.                  |
-| `harness:harness-finishing`         | Branch completion: verify tests → 4 integration options → worktree cleanup → milestone marked.  |
-| `harness:harness-parallel-dispatch` | Independence check, parallel Executor dispatch, conflict resolution before merge.               |
+| `harness-entry`             | Command routing and resume logic. Reads activity log and Handoff Documents on resume.          |
+| `harness-brainstorming`     | Structured brainstorming: scope decomposition, Visual Companion, design spec writing.           |
+| `harness-plan-writing`      | Scale-aware planning. Small: single plan. Large: `claude-progress.json` + per-milestone plan. TDD_EVIDENCE field required per task. |
+| `harness-execution`         | Orchestrator: 4 Decision Points per task (Executor → TDD Audit → Spec Review → Code Quality Review), Orchestrator self-check, context reset triggers, activity logging. |
+| `harness-debugging`         | 4-phase root cause investigation (identify → pattern analysis → hypothesis → fix).              |
+| `harness-verification`      | Evidence-before-completion gate: IDENTIFY → RUN → READ → VERIFY → CLAIM.                        |
+| `harness-tdd`               | TDD reference: Red-Green-Refactor, Rationalization Counter-Tables, Red Flags STOP rules, Regression Test Validation Pattern. |
+| `harness-worktrees`         | Git worktree setup before implementation, baseline test verification, cleanup.                  |
+| `harness-finishing`         | Branch completion: verify tests → 4 integration options → worktree cleanup → milestone marked.  |
+| `harness-parallel-dispatch` | Independence check, parallel Executor dispatch, conflict resolution before merge.               |
 | `harness:codex-integration`         | Full Codex operations manual: commands, polling, output-to-verdict mapping, token cost table.   |
 | `harness:activity-logging`          | Post-task JSONL logging with executor engine, reviewer engine, Codex session IDs, notes.        |
 | `harness:progress-management`       | CRUD for `status/claude-progress.json` milestone tracking. Step-level tracking (`current_task` field) + PROGRESS.md companion file. |
-| `harness:harness-tdd-audit`         | TDD Process Audit: verifies Executor completed tasks with genuine TDD discipline (file order, RED-first, non-hollow tests, coverage). |
-| `harness:harness-handoff`       | Session initializer: packages state into Handoff Document, triggers `/clear` for fresh context. Manual call, milestone completion, or 5-task threshold trigger. |
+| `harness-tdd-audit`         | TDD Process Audit: verifies Executor completed tasks with genuine TDD discipline (file order, RED-first, non-hollow tests, coverage). |
+| `harness-handoff`       | Session initializer: packages state into Handoff Document, triggers `/clear` for fresh context. Manual call, milestone completion, or 5-task threshold trigger. |
 
 ---
 

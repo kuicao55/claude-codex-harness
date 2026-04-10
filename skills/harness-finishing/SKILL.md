@@ -11,7 +11,7 @@ Guide the completion of implementation work: verify everything passes, decide ho
 
 ## When to Invoke This Skill
 
-Invoked automatically by `harness:harness-execution` after all tasks complete and Code Quality Review has passed for each task.
+Invoked automatically by `harness-execution` after all tasks complete and Code Quality Review has passed for each task.
 
 Also invoke directly when the user wants to wrap up a development branch.
 
@@ -28,7 +28,7 @@ cd <worktree-path>
 
 **If tests fail:**
 
-Stop. Do NOT proceed to integration options. Invoke `harness:harness-debugging` to investigate.
+Stop. Do NOT proceed to integration options. Invoke `harness-debugging` to investigate.
 
 > "⚠️ Tests are failing before merge. Cannot proceed with integration until tests pass."
 

@@ -86,7 +86,7 @@ This mirrors the logic in `harness-init` Step 3 so both skills behave consistent
 1. Run: `harness-milestone add "<milestone title>" --spec <spec-path> [--depends <milestone-id>]`
 2. The script automatically calculates the next milestone ID (e.g., milestone-3 after milestone-2).
 
-**Handoff note:** After plan is complete and user confirms execution, invoke `harness:harness-handoff` with state=`PLANNING`. The handoff document will reference this milestone's plan file.
+**Handoff note:** After plan is complete and user confirms execution, invoke `harness-handoff` with state=`PLANNING`. The handoff document will reference this milestone's plan file.
 
 ---
 
@@ -129,7 +129,7 @@ Every plan — small or large — MUST start with this header:
 ```markdown
 # <Milestone/Feature Name> Implementation Plan
 
-> **Harness note:** This plan is executed via `harness:harness-execution` using the Orchestrator / Executor / Reviewer architecture. Each task goes through Executor (TDD implementation) → Spec Reviewer (compliance check) → Code Quality Reviewer (adversarial review). Only Code Quality Review PASS closes a task.
+> **Harness note:** This plan is executed via `harness-execution` using the Orchestrator / Executor / Reviewer architecture. Each task goes through Executor (TDD implementation) → Spec Reviewer (compliance check) → Code Quality Reviewer (adversarial review). Only Code Quality Review PASS closes a task.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -242,12 +242,12 @@ Wait for user confirmation.
 
 **If user confirms:**
 
-1. Invoke `harness:harness-handoff` with state=`PLANNING`:
+1. Invoke `harness-handoff` with state=`PLANNING`:
    - milestone_id: current milestone id
    - task_id: null (no task started yet)
    - Next action: `/super-harness:execute --plan docs/harness/plans/<filename>.md`
 
-2. After the session clears and user resumes, route to `harness:harness-execution`
+2. After the session clears and user resumes, route to `harness-execution`
 
 **If user declines:**
 

@@ -202,7 +202,7 @@ git merge harness/parallel-task-M
 1. The tasks were not actually independent, or
 2. There's an integration bug to debug
 
-Invoke `harness:harness-debugging` if needed.
+Invoke `harness-debugging` if needed.
 
 ---
 
