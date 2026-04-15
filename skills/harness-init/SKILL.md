@@ -19,11 +19,16 @@ Generate a comprehensive `.super-harness/status/PROJECT.md` by reading the entir
 ### Step 1: Run Pre-flight Check
 
 ```bash
-# Ensure directories exist before generating context
-mkdir -p .super-harness/status .super-harness/specs .super-harness/plans .super-harness/handoffs .super-harness/logs 2>/dev/null || true
+# Ensure all harness directories exist (mkdir -p is safe even if they already exist)
+mkdir -p .super-harness/status
+mkdir -p .super-harness/specs
+mkdir -p .super-harness/plans
+mkdir -p .super-harness/handoffs
+mkdir -p .super-harness/logs
+echo "Directory structure ready."
 ```
 
-Ensure directories exist before generating context.
+**Important:** Use separate `mkdir -p` commands for each directory. This ensures that if one fails (e.g., permissions issue), it's visible rather than silently hidden. `mkdir -p` will not error if the directory already exists.
 
 ### Step 2: Detect Project Type
 

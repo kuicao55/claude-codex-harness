@@ -27,10 +27,15 @@ if [[ -f ".super-harness/status/claude-progress.json" ]]; then
 else
   # Fresh project - create directory structure
   echo "Fresh project detected. Creating directory structure..."
-  mkdir -p .super-harness/status .super-harness/specs .super-harness/plans .super-harness/handoffs .super-harness/logs
-  echo "Created: .super-harness/status/, .super-harness/specs/, .super-harness/plans/, .super-harness/handoffs/, .super-harness/logs/"
   echo "Ready to start. Run /super-harness:brainstorm or /super-harness:plan to begin."
 fi
+
+# Always ensure all harness directories exist (mkdir -p is safe even if they already exist)
+mkdir -p .super-harness/status
+mkdir -p .super-harness/specs
+mkdir -p .super-harness/plans
+mkdir -p .super-harness/handoffs
+mkdir -p .super-harness/logs
 ```
 
 **Interpretation:**
