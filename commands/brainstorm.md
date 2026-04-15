@@ -8,7 +8,7 @@ Show version banner first:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 super-harness v<VERSION>
 
-请告诉我你想要开发什么功能？
+欢迎使用 super-harness v<VERSION>
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 

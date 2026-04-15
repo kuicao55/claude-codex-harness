@@ -15,7 +15,7 @@ Turn ideas into fully formed designs and specs through natural collaborative dia
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 super-harness v<VERSION>
 
-请告诉我你想要开发什么功能？
+欢迎使用 super-harness v<VERSION>
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
