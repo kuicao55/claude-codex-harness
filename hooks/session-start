@@ -7,8 +7,8 @@ PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
 
 # Check for an existing project progress file
 PROGRESS_FILE=""
-if [[ -f "status/claude-progress.json" ]]; then
-  PROGRESS_FILE="status/claude-progress.json"
+if [[ -f ".super-harness/status/claude-progress.json" ]]; then
+  PROGRESS_FILE=".super-harness/status/claude-progress.json"
 elif [[ -f "claude-progress.json" ]]; then
   PROGRESS_FILE="claude-progress.json"
 fi
@@ -30,7 +30,7 @@ Architecture:
   Each role can use Claude subagent or Codex engine (/codex:rescue, /codex:review, /codex:adversarial-review).
   All implementation happens in a git worktree (created on first execution, shared across milestones).
 
-Session boundary: Every session ends with a handoff document at docs/harness/handoffs/. Resume reads this to restore context.
+Session boundary: Every session ends with a handoff document at .super-harness/handoffs/. Resume reads this to restore context.
 
 Available skills:
   harness:harness-brainstorming   — Structured brainstorming with visual companion

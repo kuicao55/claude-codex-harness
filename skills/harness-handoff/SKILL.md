@@ -33,11 +33,11 @@ PLANNING → IN_PROGRESS → MILESTONE_DONE → ALL_DONE
 Before writing the handoff, determine the state:
 
 **PLANNING:** Plan was just written, execution has not started yet.
-- Read the plan file path from `status/claude-progress.json` current milestone
+- Read the plan file path from `.super-harness/status/claude-progress.json` current milestone
 - No task has been started yet
 
 **IN_PROGRESS:** Milestone execution is underway.
-- Read current task from `status/claude-progress.json`
+- Read current task from `.super-harness/status/claude-progress.json`
 - Track which tasks are completed
 
 **MILESTONE_DONE:** All tasks in current milestone passed Code Quality Review.
@@ -47,8 +47,8 @@ Before writing the handoff, determine the state:
 
 ## Step 2: Gather State
 
-1. Read `status/claude-progress.json` — current milestone, completed tasks, pending tasks
-2. Read recent activity log — `logs/activity-*.jsonl` for current session's entries
+1. Read `.super-harness/status/claude-progress.json` — current milestone, completed tasks, pending tasks
+2. Read recent activity log — `.super-harness/logs/activity-*.jsonl` for current session's entries
 3. Check active git worktree — `git worktree list`
 4. Note deferred items from activity log notes field
 5. Note significant technical decisions made during this session
@@ -57,9 +57,9 @@ Before writing the handoff, determine the state:
 
 **Use the `harness-handoff` script.** Do NOT manually write the handoff file.
 
-The script reads structured fields (spec, plan, milestone) from `status/claude-progress.json` automatically. You only need to provide the state and free-text content.
+The script reads structured fields (spec, plan, milestone) from `.super-harness/status/claude-progress.json` automatically. You only need to provide the state and free-text content.
 
-**Single file:** The handoff document is always `docs/harness/handoffs/handoff.md` — overwritten each time. No timestamped filenames.
+**Single file:** The handoff document is always `.super-harness/handoffs/handoff.md` — overwritten each time. No timestamped filenames.
 
 ```bash
 scripts/harness-handoff <state> \
@@ -75,7 +75,7 @@ scripts/harness-handoff <state> \
 ```bash
 # After plan confirmed
 scripts/harness-handoff PLANNING \
-  --next-action "/super-harness:execute --plan docs/harness/plans/2026-04-09-milestone-1.md"
+  --next-action "/super-harness:execute --plan .super-harness/plans/2026-04-09-milestone-1.md"
 
 # Mid-execution
 scripts/harness-handoff IN_PROGRESS \
@@ -99,28 +99,28 @@ scripts/harness-handoff ALL_DONE \
 ```
 
 **What the script does automatically:**
-- Reads `status/claude-progress.json` for spec_file, plan_file, milestone_id
-- Checks if `status/PROJECT.md` exists → includes in Context Index if so
-- Writes `docs/harness/handoffs/handoff.md`
-- Updates `current_session_handoff` in `claude-progress.json`
+- Reads `.super-harness/status/claude-progress.json` for spec_file, plan_file, milestone_id
+- Checks if `.super-harness/status/PROJECT.md` exists → includes in Context Index if so
+- Writes `.super-harness/handoffs/handoff.md`
+- Updates `current_session_handoff` in `.super-harness/status/claude-progress.json`
 - On `MILESTONE_DONE`: runs `harness-milestone complete <milestone-id>`
 - On `ALL_DONE`: completes any remaining uncompleted milestones
 - Git commits the changes
 
-**Key principle:** The handoff is an envelope, not the source of truth. It references `claude-progress.json` and plan files — it does not duplicate their content.
+**Key principle:** The handoff is an envelope, not the source of truth. It references `.super-harness/status/claude-progress.json` and plan files — it does not duplicate their content.
 
 ### Step 3b: Create or Update PROJECT.md (on MILESTONE_DONE or ALL_DONE)
 
-If state is `MILESTONE_DONE` or `ALL_DONE`, update `status/PROJECT.md` to record new project knowledge. Note: single-milestone projects skip MILESTONE_DONE and go directly to ALL_DONE, so both states must trigger this step.
+If state is `MILESTONE_DONE` or `ALL_DONE`, update `.super-harness/status/PROJECT.md` to record new project knowledge. Note: single-milestone projects skip MILESTONE_DONE and go directly to ALL_DONE, so both states must trigger this step.
 
 **Detect project name:**
 1. Try `git remote -v` — extract project name from remote URL
 2. Fall back to `basename "$(pwd)"` — use directory name
 
 **Extract milestone knowledge:**
-- From the spec file (read `docs/harness/specs/<spec-name>.md`): extract tech stack, architecture, functional modules
-- From the plan file (read `docs/harness/plans/<plan-name>.md`): extract task list and what each task implements
-- From completed tasks in `claude-progress.json`: infer which modules/files were created
+- From the spec file (read `.super-harness/specs/<spec-name>.md`): extract tech stack, architecture, functional modules
+- From the plan file (read `.super-harness/plans/<plan-name>.md`): extract task list and what each task implements
+- From completed tasks in `.super-harness/status/claude-progress.json`: infer which modules/files were created
 
 ---
 
@@ -166,19 +166,19 @@ Generate a complete PROJECT.md from scratch:
 **Commands:** `/super-harness:brainstorm`, `/super-harness:plan`, `/super-harness:execute`, `/super-harness:resume`, `/super-harness:init`, `/super-harness:status`, `/super-harness:handoff`
 
 **Key Files:**
-- `status/claude-progress.json` — Milestone tracker
-- `status/PROJECT.md` — This file
-- `docs/harness/specs/` — Design specs
-- `docs/harness/plans/` — Implementation plans
-- `docs/harness/handoffs/` — Session handoffs
-- `logs/activity-YYYY-MM-DD.jsonl` — Activity logs
+- `.super-harness/status/claude-progress.json` — Milestone tracker
+- `.super-harness/status/PROJECT.md` — This file
+- `.super-harness/specs/` — Design specs
+- `.super-harness/plans/` — Implementation plans
+- `.super-harness/handoffs/` — Session handoffs
+- `.super-harness/logs/activity-YYYY-MM-DD.jsonl` — Activity logs
 ```
 
 ---
 
 **If PROJECT.md EXISTS:**
 
-1. Read existing `status/PROJECT.md`
+1. Read existing `.super-harness/status/PROJECT.md`
 2. Extract new functional modules introduced by this milestone (from spec/plan — modules not already in PROJECT.md)
 3. Append new modules to Functional Modules table (do not delete existing)
 4. Update `Last Updated` field to today's date
@@ -188,7 +188,7 @@ Generate a complete PROJECT.md from scratch:
 
 **After both paths:**
 
-Commit: `git add status/PROJECT.md && git commit -m "harness: update project context after milestone-N"`
+Commit: `git add .super-harness/status/PROJECT.md && git commit -m "harness: update project context after milestone-N"`
 
 **Note:** This grows the project knowledge base over time. Existing entries are preserved.
 
@@ -230,7 +230,7 @@ Only executed when state is PLANNING, IN_PROGRESS, or MILESTONE_DONE and user co
 - **Read-only except for handoff and progress file:** Never modifies spec, plan, or code files
 - **Minimal:** Handoff only contains pointers and state — actual content lives in the source files
 - **User confirms:** Never auto-resets without explicit user confirmation
-- **Single handoff file:** Always `docs/harness/handoffs/handoff.md`, overwritten each time
+- **Single handoff file:** Always `.super-harness/handoffs/handoff.md`, overwritten each time
 - **Script-managed:** Always use `scripts/harness-handoff` to write — never manually edit the handoff file
 
 ## Integration

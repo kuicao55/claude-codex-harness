@@ -1,11 +1,11 @@
 ---
 name: harness-init
-description: "Reads the entire codebase and generates status/PROJECT.md with tech stack, functional modules, architectural decisions, and current harness state."
+description: "Reads the entire codebase and generates .super-harness/status/PROJECT.md with tech stack, functional modules, architectural decisions, and current harness state."
 ---
 
 # Harness Init — Project Context Generation
 
-Generate a comprehensive `status/PROJECT.md` by reading the entire codebase.
+Generate a comprehensive `.super-harness/status/PROJECT.md` by reading the entire codebase.
 
 **Announce at start:** "I'm using the harness-init skill to analyze this codebase and generate the project context document."
 
@@ -20,7 +20,7 @@ Generate a comprehensive `status/PROJECT.md` by reading the entire codebase.
 
 ```bash
 # Ensure directories exist before generating context
-mkdir -p status docs/harness/specs docs/harness/plans docs/harness/handoffs logs 2>/dev/null || true
+mkdir -p .super-harness/status .super-harness/specs .super-harness/plans .super-harness/handoffs .super-harness/logs 2>/dev/null || true
 ```
 
 Ensure directories exist before generating context.
@@ -72,14 +72,14 @@ From reading source files and docs, identify:
 
 ### Step 6: Check Harness State
 
-If `status/claude-progress.json` exists:
+If `.super-harness/status/claude-progress.json` exists:
 - Read current milestone and progress
 - Read active branch from `git branch --show-current`
 - List existing milestones
 
 ### Step 7: Generate PROJECT.md
 
-Write to `status/PROJECT.md`:
+Write to `.super-harness/status/PROJECT.md`:
 
 ```markdown
 # Project Context
@@ -130,23 +130,23 @@ Write to `status/PROJECT.md`:
 **Commands:** `/super-harness:brainstorm`, `/super-harness:plan`, `/super-harness:execute`, `/super-harness:resume`, `/super-harness:status`, `/super-harness:init`, `/super-harness:handoff`
 
 **Key Files:**
-- `status/claude-progress.json` — Milestone tracker
-- `status/PROJECT.md` — This file
-- `docs/harness/specs/` — Design specs
-- `docs/harness/plans/` — Implementation plans
-- `docs/harness/handoffs/` — Session handoffs
-- `logs/activity-YYYY-MM-DD.jsonl` — Activity logs
+- `.super-harness/status/claude-progress.json` — Milestone tracker
+- `.super-harness/status/PROJECT.md` — This file
+- `.super-harness/specs/` — Design specs
+- `.super-harness/plans/` — Implementation plans
+- `.super-harness/handoffs/` — Session handoffs
+- `.super-harness/logs/activity-YYYY-MM-DD.jsonl` — Activity logs
 ```
 
 ### Step 8: Commit
 
 ```bash
-git add status/PROJECT.md && git commit -m "harness: generate project context"
+git add .super-harness/status/PROJECT.md && git commit -m "harness: generate project context"
 ```
 
 ### Step 9: Confirm with User
 
-> "Project context generated and saved to `status/PROJECT.md`.
+> "Project context generated and saved to `.super-harness/status/PROJECT.md`.
 >
 > Summary:
 > - Tech stack: <stack>

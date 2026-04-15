@@ -47,7 +47,7 @@ has_git() {
 }
 
 has_progress() {
-    [[ -f "status/claude-progress.json" ]]
+    [[ -f ".super-harness/status/claude-progress.json" ]]
 }
 
 # Track exit state
@@ -64,19 +64,19 @@ fi
 if ! has_progress; then
     show_info "Fresh project detected. Creating directory structure..."
 
-    mkdir -p status
-    mkdir -p docs/harness/specs
-    mkdir -p docs/harness/plans
-    mkdir -p docs/harness/handoffs
-    mkdir -p logs
+    mkdir -p .super-harness/status
+    mkdir -p .super-harness/specs
+    mkdir -p .super-harness/plans
+    mkdir -p .super-harness/handoffs
+    mkdir -p .super-harness/logs
 
     echo ""
     echo "Created directories:"
-    echo "  - status/"
-    echo "  - docs/harness/specs/"
-    echo "  - docs/harness/plans/"
-    echo "  - docs/harness/handoffs/"
-    echo "  - logs/"
+    echo "  - .super-harness/status/"
+    echo "  - .super-harness/specs/"
+    echo "  - .super-harness/plans/"
+    echo "  - .super-harness/handoffs/"
+    echo "  - .super-harness/logs/"
     echo ""
     show_info "Ready to start. Run /super-harness:brainstorm or /super-harness:plan to begin."
 
@@ -86,7 +86,7 @@ fi
 # Existing project: ensure directory structure exists
 show_info "Existing project detected. Checking directory structure..."
 
-for dir in docs/harness/specs docs/harness/plans docs/harness/handoffs logs; do
+for dir in .super-harness/specs .super-harness/plans .super-harness/handoffs .super-harness/logs; do
     if [[ ! -d "$dir" ]]; then
         mkdir -p "$dir"
         echo "  Created: $dir"

@@ -11,10 +11,10 @@ Guide the completion of implementation work: verify everything passes, decide ho
 
 ## Step 0: Read Worktree Info
 
-Before any phase, read the worktree path from `status/claude-progress.json`:
+Before any phase, read the worktree path from `.super-harness/status/claude-progress.json`:
 
 ```
-bash: python3 -c "import json; d=json.load(open('status/claude-progress.json')); wt=d.get('worktree'); print(wt['path'] + '|' + wt['branch'] if wt else '')"
+bash: python3 -c "import json; d=json.load(open('.super-harness/status/claude-progress.json')); wt=d.get('worktree'); print(wt['path'] + '|' + wt['branch'] if wt else '')"
 ```
 
 **If worktree exists:**
@@ -134,7 +134,7 @@ gh pr create \
 - [ ] Code Quality Review passed for all tasks
 
 ## Harness log
-Activity log: logs/activity-<date>.jsonl
+Activity log: .super-harness/logs/activity-<date>.jsonl
 EOF
 )"
 ```

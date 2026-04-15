@@ -19,7 +19,7 @@
 
 set -e
 
-PROGRESS_FILE="status/claude-progress.json"
+PROGRESS_FILE=".super-harness/status/claude-progress.json"
 COMMAND="${1:-}"
 
 show_help() {
@@ -55,12 +55,12 @@ Options:
   --project-dir <path>     Use specified directory
 
 Examples:
-  harness-milestone init "My Project" --spec docs/harness/specs/design.md
+  harness-milestone init "My Project" --spec .super-harness/specs/design.md
   harness-milestone list
-  harness-milestone add "User authentication" --spec docs/harness/specs/auth.md
+  harness-milestone add "User authentication" --spec .super-harness/specs/auth.md
   harness-milestone next
   harness-milestone complete milestone-2
-  harness-milestone set-plan milestone-1 docs/harness/plans/2026-04-09-milestone-1.md
+  harness-milestone set-plan milestone-1 .super-harness/plans/2026-04-09-milestone-1.md
   harness-milestone set-worktree ../worktrees/myproject /path/to/myproject -b harness/milestone-1
 EOF
 }
@@ -70,7 +70,7 @@ get_next_id() {
     python3 <<'PYEOF'
 import json, re, sys
 
-with open('status/claude-progress.json') as f:
+with open('.super-harness/status/claude-progress.json') as f:
     d = json.load(f)
 
 ids = []
@@ -94,7 +94,7 @@ cmd_list() {
     python3 <<'PYEOF'
 import json, sys
 
-with open('status/claude-progress.json') as f:
+with open('.super-harness/status/claude-progress.json') as f:
     d = json.load(f)
 
 print(f"Project: {d.get('project', 'unknown')}")
@@ -141,7 +141,7 @@ cmd_next() {
     python3 <<'PYEOF'
 import json, sys
 
-with open('status/claude-progress.json') as f:
+with open('.super-harness/status/claude-progress.json') as f:
     d = json.load(f)
 
 for m in d.get('milestones', []):
@@ -169,7 +169,7 @@ cmd_status() {
     python3 <<'PYEOF'
 import json, sys, os
 
-with open('status/claude-progress.json') as f:
+with open('.super-harness/status/claude-progress.json') as f:
     d = json.load(f)
 
 ms = d.get('milestones', [])
@@ -185,7 +185,7 @@ if in_progress:
 else:
     print('All milestones complete!')
 
-handoff_dir = 'docs/harness/handoffs'
+handoff_dir = '.super-harness/handoffs'
 if os.path.isdir(handoff_dir):
     files = sorted([f for f in os.listdir(handoff_dir) if f.endswith('.md')])
     if files:

@@ -40,9 +40,9 @@ git branch --show-current
 ```
 
 **If on `main`/`master`:**
-1. Determine the version branch name. Check `status/claude-progress.json` for a saved `version_branch`:
+1. Determine the version branch name. Check `.super-harness/status/claude-progress.json` for a saved `version_branch`:
    ```bash
-   python3 -c "import json; d=json.load(open('status/claude-progress.json')); print(d.get('version_branch', ''))"
+   python3 -c "import json; d=json.load(open('.super-harness/status/claude-progress.json')); print(d.get('version_branch', ''))"
    ```
 2. If `version_branch` exists → checkout that branch
 3. If no `version_branch` → ask the user:
@@ -62,10 +62,10 @@ git branch --show-current
 
 Each milestone gets its own worktree. After a milestone completes, the worktree is merged back into the version branch and deleted.
 
-Read `status/claude-progress.json` to check for an existing worktree for the current milestone:
+Read `.super-harness/status/claude-progress.json` to check for an existing worktree for the current milestone:
 
 ```bash
-python3 -c "import json; d=json.load(open('status/claude-progress.json')); wt=d.get('worktree'); print(wt['path'] + '|' + wt['branch'] if wt else '')"
+python3 -c "import json; d=json.load(open('.super-harness/status/claude-progress.json')); wt=d.get('worktree'); print(wt['path'] + '|' + wt['branch'] if wt else '')"
 ```
 
 **If `worktree` field exists in progress.json AND the worktree directory exists:**
@@ -83,8 +83,8 @@ python3 -c "import json; d=json.load(open('status/claude-progress.json')); wt=d.
    # Branch: harness/<milestone-id>-<short-description>
    # Path: read from harness.config.json worktrees_dir, or default to "worktrees"
    WORKTREES_DIR=$(python3 -c "import json; d=json.load(open('harness.config.json')); print(d.get('worktrees_dir', 'worktrees'))" 2>/dev/null || echo "worktrees")
-   MILESTONE_ID=$(python3 -c "import json; d=json.load(open('status/claude-progress.json')); ms=[m for m in d['milestones'] if not m.get('passed')]; print(ms[0]['id'] if ms else 'unknown')")
-   MILESTONE_TITLE=$(python3 -c "import json; d=json.load(open('status/claude-progress.json')); ms=[m for m in d['milestones'] if not m.get('passed')]; print(ms[0]['title'].split()[0].lower() if ms else 'work')")
+   MILESTONE_ID=$(python3 -c "import json; d=json.load(open('.super-harness/status/claude-progress.json')); ms=[m for m in d['milestones'] if not m.get('passed')]; print(ms[0]['id'] if ms else 'unknown')")
+   MILESTONE_TITLE=$(python3 -c "import json; d=json.load(open('.super-harness/status/claude-progress.json')); ms=[m for m in d['milestones'] if not m.get('passed')]; print(ms[0]['title'].split()[0].lower() if ms else 'work')")
 
    BRANCH_NAME="harness/${MILESTONE_ID}-${MILESTONE_TITLE}"
    WORKTREE_PATH="${WORKTREES_DIR}/${MILESTONE_ID}"
@@ -104,7 +104,7 @@ python3 -c "import json; d=json.load(open('status/claude-progress.json')); wt=d.
 
 **Note:** Each milestone creates its own worktree based on the current version branch (which already contains previous milestones' merged work). When a milestone completes, its worktree is merged back and cleaned up (see Post-Milestone Cleanup below).
 
-Read the plan file. If not specified, ask: "Which plan file should I execute? (path to the `.md` file in `docs/harness/plans/`)"
+Read the plan file. If not specified, ask: "Which plan file should I execute? (path to the `.md` file in `.super-harness/plans/`)"
 
 Review critically — identify questions or concerns. If the plan has critical gaps, raise them with the user before starting.
 

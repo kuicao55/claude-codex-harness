@@ -77,20 +77,20 @@ This mirrors the logic in `harness-init` Step 3 so both skills behave consistent
 
 ## Step 3: Initialize Milestones
 
-**Use the `harness-milestone` script for all milestone operations.** Do NOT manually edit `status/claude-progress.json`.
+**Use the `harness-milestone` script for all milestone operations.** Do NOT manually edit `.super-harness/status/claude-progress.json`.
 
-1. Run: `harness-milestone init "<project-name>" --spec docs/harness/specs/YYYY-MM-DD-<topic>-design.md`
+1. Run: `harness-milestone init "<project-name>" --spec .super-harness/specs/YYYY-MM-DD-<topic>-design.md`
 
-   Example: `harness-milestone init "PocketMon" --spec docs/harness/specs/2026-04-09-pocketmon-design.md`
+   Example: `harness-milestone init "PocketMon" --spec .super-harness/specs/2026-04-09-pocketmon-design.md`
 
 2. Add the first milestone:
    ```
-   harness-milestone add "<milestone-1 title>" --spec docs/harness/specs/YYYY-MM-DD-<topic>-design.md
+   harness-milestone add "<milestone-1 title>" --spec .super-harness/specs/YYYY-MM-DD-<topic>-design.md
    ```
 
 3. If Step 1's assessment determined multiple milestones are needed, add them now:
    ```
-   harness-milestone add "<milestone-2 title>" --spec docs/harness/specs/YYYY-MM-DD-<topic>-design.md
+   harness-milestone add "<milestone-2 title>" --spec .super-harness/specs/YYYY-MM-DD-<topic>-design.md
    # ... add as many as determined
    ```
 
@@ -151,22 +151,22 @@ Total: 2 milestones, 9 tasks
 For EACH milestone (iterate through all milestones in order):
 
 1. Write a detailed `plan.md` for THIS MILESTONE using the Task Structure below
-2. Save to `docs/harness/plans/YYYY-MM-DD-<milestone-id>.md`
+2. Save to `.super-harness/plans/YYYY-MM-DD-<milestone-id>.md`
 3. Link the plan to the milestone:
    ```
-   harness-milestone set-plan <milestone-id> docs/harness/plans/YYYY-MM-DD-<milestone-id>.md
+   harness-milestone set-plan <milestone-id> .super-harness/plans/YYYY-MM-DD-<milestone-id>.md
    ```
-   Example: `harness-milestone set-plan milestone-1 docs/harness/plans/2026-04-09-milestone-1.md`
-4. Commit: `git add docs/harness/plans/ && git commit -m "harness: plan for milestone-N"`
+   Example: `harness-milestone set-plan milestone-1 .super-harness/plans/2026-04-09-milestone-1.md`
+4. Commit: `git add .super-harness/plans/ && git commit -m "harness: plan for milestone-N"`
 5. Move to the next milestone and repeat
 
 **Only proceed to the Execution Handoff after ALL milestones have their plans written and linked.**
 
 ## Step 4b: Deprecate Old Plan (if re-planning)
 
-If the milestone already has a `plan_file` in `status/claude-progress.json`, you are **re-planning** it. The old plan file must be deprecated to avoid confusion:
+If the milestone already has a `plan_file` in `.super-harness/status/claude-progress.json`, you are **re-planning** it. The old plan file must be deprecated to avoid confusion:
 
-1. Read the old plan path from `status/claude-progress.json`
+1. Read the old plan path from `.super-harness/status/claude-progress.json`
 2. Check if the old file exists — if not, skip deprecation
 3. If the old file exists:
    - Rename it: `mv old-plan.md old-plan.md.deprecated-YYYY-MM-DD`
@@ -174,10 +174,10 @@ If the milestone already has a `plan_file` in `status/claude-progress.json`, you
      ```markdown
      ---
      deprecated: YYYY-MM-DD
-     replaced_by: docs/harness/plans/YYYY-MM-DD-<milestone-id>.md
+     replaced_by: .super-harness/plans/YYYY-MM-DD-<milestone-id>.md
      ---
      ```
-   - Commit: `git add docs/harness/plans/ && git commit -m "harness: deprecate old plan for milestone-N"`
+   - Commit: `git add .super-harness/plans/ && git commit -m "harness: deprecate old plan for milestone-N"`
 
 ---
 

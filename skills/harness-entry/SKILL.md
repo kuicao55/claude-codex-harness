@@ -20,15 +20,15 @@ if ! git rev-parse --git-dir >/dev/null 2>&1; then
 fi
 
 # Check if progress file exists
-if [[ -f "status/claude-progress.json" ]]; then
+if [[ -f ".super-harness/status/claude-progress.json" ]]; then
   # Existing project - read current milestone
-  CURRENT_MILESTONE=$(grep -o '"id"' status/claude-progress.json | head -1)
+  CURRENT_MILESTONE=$(grep -o '"id"' .super-harness/status/claude-progress.json | head -1)
   echo "Existing project detected. Current milestone: $CURRENT_MILESTONE"
 else
   # Fresh project - create directory structure
   echo "Fresh project detected. Creating directory structure..."
-  mkdir -p status docs/harness/specs docs/harness/plans docs/harness/handoffs logs
-  echo "Created: status/, docs/harness/specs/, docs/harness/plans/, docs/harness/handoffs/, logs/"
+  mkdir -p .super-harness/status .super-harness/specs .super-harness/plans .super-harness/handoffs .super-harness/logs
+  echo "Created: .super-harness/status/, .super-harness/specs/, .super-harness/plans/, .super-harness/handoffs/, .super-harness/logs/"
   echo "Ready to start. Run /super-harness:brainstorm or /super-harness:plan to begin."
 fi
 ```
@@ -67,7 +67,7 @@ Then route to `harness-brainstorming` with that context. No state check needed.
 
 ### If invoked via `/super-harness:plan`
 
-**Pre-check:** Check if any design spec exists at `docs/harness/specs/`:
+**Pre-check:** Check if any design spec exists at `.super-harness/specs/`:
 - If **no spec exists**: Tell the user:
   > "No design spec found. You should brainstorm first to create a spec.
   > Run `/super-harness:brainstorm` to start."
@@ -80,7 +80,7 @@ Then route to `harness-brainstorming` with that context. No state check needed.
 
 **Execution gate:** Orchestrator does not implement or review code directly. Route to `harness-execution` and follow its HARD-GATE: dispatch Executor and both reviewers (subagent or Codex), confirm engine with the user every stage, maintain TodoWrite from the start, and only close a task after Code Quality Review **PASS**.
 
-Check if a plan file exists. Ask the user: "Which plan file should I execute? (Provide the path, or press Enter if there's only one plan in `docs/harness/plans/`)"
+Check if a plan file exists. Ask the user: "Which plan file should I execute? (Provide the path, or press Enter if there's only one plan in `.super-harness/plans/`)"
 
 Then route to `harness-execution` with the specified plan.
 
@@ -98,7 +98,7 @@ Route to `harness-tdd-audit`. This skill is typically called by Orchestrator int
 
 ### If invoked via `/super-harness:init`
 
-Route to `harness-init`. This skill reads the entire codebase and generates `status/PROJECT.md`. Run once per project to establish project context for future sessions.
+Route to `harness-init`. This skill reads the entire codebase and generates `.super-harness/status/PROJECT.md`. Run once per project to establish project context for future sessions.
 
 ### If invoked via `/super-harness:resume`
 
@@ -112,7 +112,7 @@ Follow the full resume flow below.
 
 ### Step 1: Locate Handoff Document
 
-Read `docs/harness/handoffs/handoff.md` — this is the single, always-current handoff file.
+Read `.super-harness/handoffs/handoff.md` — this is the single, always-current handoff file.
 
 - If found: proceed to Step 2.
 - If NOT found: Tell the user:
@@ -141,11 +141,11 @@ Read the handoff document and display:
 ### Context Index
 - Spec: <path>
 - Plan: <path>
-- Progress: status/claude-progress.json
+- Progress: .super-harness/status/claude-progress.json
 - Worktree: <path> (branch: <branch>) ← if worktree exists
 
 ### Worktree
-Read worktree info from the handoff document (or from status/claude-progress.json). If a worktree is recorded:
+Read worktree info from the handoff document (or from .super-harness/status/claude-progress.json). If a worktree is recorded:
 > "Worktree detected: `<path>` (branch: `<branch>`). Orchestrator will continue in this worktree."
 Note: The Orchestrator (harness-execution) will handle the actual `cd` into the worktree via its Setup Step 0. No directory change needed here.
 
@@ -168,7 +168,7 @@ After displaying the handoff summary, verify that all referenced files in the Co
 
 1. Read the plan file path from the handoff → verify it exists
 2. Read the spec file path from the handoff → verify it exists
-3. Read `status/claude-progress.json` → verify it exists
+3. Read `.super-harness/status/claude-progress.json` → verify it exists
 4. If worktree is recorded in handoff: verify the worktree path exists (`ls <worktree-path>`)
 
 **If any file is missing:**
@@ -191,7 +191,7 @@ Wait for user choice and act accordingly.
 
 Based on the context index in the handoff:
 
-1. Read `status/claude-progress.json` — milestone state, current task
+1. Read `.super-harness/status/claude-progress.json` — milestone state, current task
 2. Read the plan file — full task list with completion status
 3. Read the spec file — full specification for reference
 

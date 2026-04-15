@@ -21,8 +21,8 @@
 
 set -e
 
-PROGRESS_FILE="status/claude-progress.json"
-HANDOFF_FILE="docs/harness/handoffs/handoff.md"
+PROGRESS_FILE=".super-harness/status/claude-progress.json"
+HANDOFF_FILE=".super-harness/handoffs/handoff.md"
 
 # Parse global flags
 PROJECT_DIR=""
@@ -61,13 +61,13 @@ Options:
   --project-dir <path>        Use specified directory
 
 Notes:
-  - spec_file, plan_file, and milestone_id are read from status/claude-progress.json
-  - status/PROJECT.md is included in Context Index if it exists
-  - The handoff file is always docs/harness/handoffs/handoff.md (single file, overwritten)
-  - status/claude-progress.json is updated with the handoff path
+  - spec_file, plan_file, and milestone_id are read from .super-harness/status/claude-progress.json
+  - .super-harness/status/PROJECT.md is included in Context Index if it exists
+  - The handoff file is always .super-harness/handoffs/handoff.md (single file, overwritten)
+  - .super-harness/status/claude-progress.json is updated with the handoff path
 
 Examples:
-  harness-handoff PLANNING --next-action "/super-harness:execute --plan docs/harness/plans/2026-04-09-milestone-1.md"
+  harness-handoff PLANNING --next-action "/super-harness:execute --plan .super-harness/plans/2026-04-09-milestone-1.md"
   harness-handoff IN_PROGRESS --task-id task-3 --tasks-completed task-1,task-2 --next-action "/super-harness:resume"
   harness-handoff MILESTONE_DONE --tasks-completed task-1,task-2,task-3 --decisions "Used Codex for all reviews"
   harness-handoff ALL_DONE --tasks-completed task-1,task-2,task-3,task-4,task-5,task-6
@@ -145,7 +145,7 @@ if not milestone_id and d.get('milestones'):
     plan_file = last.get('plan_file') or ''
 
 # Check if PROJECT.md exists
-project_md_exists = os.path.exists('status/PROJECT.md')
+project_md_exists = os.path.exists('.super-harness/status/PROJECT.md')
 
 # Current timestamp
 now = datetime.datetime.now()
@@ -173,10 +173,10 @@ else:
 context_lines = [
     f'- **spec:** {spec_file}',
     f'- **plan:** {plan_file}',
-    f'- **progress:** status/claude-progress.json',
+    f'- **progress:** .super-harness/status/claude-progress.json',
 ]
 if project_md_exists:
-    context_lines.append('- **project:** status/PROJECT.md')
+    context_lines.append('- **project:** .super-harness/status/PROJECT.md')
 if worktree:
     context_lines.append(f'- **worktree:** {worktree.get("path", "")} (branch: {worktree.get("branch", "")})')
 context_index = '\n'.join(context_lines)
