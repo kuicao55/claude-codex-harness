@@ -53,11 +53,11 @@ has_progress() {
 # Track exit state
 exit_code=0
 
-# Check git initialization
+# Check git initialization; if not present, auto-initialize
 if ! has_git; then
-    show_warning "Not a git repository. Activity logging and handoffs require git."
-    show_warning "Run 'git init' to initialize, or some features may not work."
-    exit_code=1
+    show_warning "Not a git repository. Initializing git..."
+    git init
+    echo "Git repository initialized."
 fi
 
 # Fresh project (no progress file)

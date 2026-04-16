@@ -14,9 +14,11 @@ This skill handles the entry point for all `/super-harness:` commands. It establ
 Before routing, establish project state with these Bash commands:
 
 ```bash
-# Check if git repository
+# Check if git repository; if not, initialize one (harness requires git)
 if ! git rev-parse --git-dir >/dev/null 2>&1; then
-  echo "WARNING: Not a git repository. Activity logging and handoffs require git."
+  echo "WARNING: Not a git repository. Initializing git repository..."
+  git init
+  echo "Git repository initialized."
 fi
 
 # Check if progress file exists
@@ -44,7 +46,7 @@ mkdir -p .super-harness/logs
 |----------|---------------|--------------|
 | Fresh project (no progress file) | First time using harness | "First time using harness in this project. Directory structure created. Ready to start." |
 | Existing project | Resuming or adding milestones | Display current milestone and status |
-| Git not initialized | Warning | "WARNING: This is not a git repository. Git is required for activity logging and handoffs to work properly." |
+| Git not initialized | Auto-init | "Git repository initialized." — harness runs `git init` automatically |
 | Missing directories | Auto-created | "Created missing directories: ..." |
 
 **Do NOT proceed with any routing until pre-flight check completes.**
