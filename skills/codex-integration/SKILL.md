@@ -9,13 +9,13 @@ Orchestrator can delegate tasks to Codex as an alternative engine for Executor a
 
 All commands are provided by the `codex-plugin-cc` plugin (v1.0.2+): [https://github.com/openai/codex-plugin-cc](https://github.com/openai/codex-plugin-cc)
 
-**IMPORTANT:** Codex commands must be invoked via `codex-companion.mjs` using the Bash tool — NOT as slash commands. Slash commands only work in the main session; Orchestrator runs as a sub-agent where they are not intercepted.
+**IMPORTANT:** Codex commands must be invoked via `codex-call` using the Bash tool — NOT as slash commands. Slash commands only work in the main session; Orchestrator runs as a sub-agent where they are not intercepted.
 
-**Companion script path:**
+**Companion script path (always use Bash):**
 ```
-CLAUDE_PLUGIN_ROOT="${HOME}/.claude/plugins/marketplaces/openai-codex/plugins/codex"
-node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" <command> [args]
+Bash: codex-call <command> [args]
 ```
+`codex-call` is a wrapper at `${CLAUDE_PLUGIN_ROOT}/scripts/codex-call` that dynamically finds the latest Codex version at runtime.
 
 ---
 
@@ -24,7 +24,7 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" <command> [args]
 Before using any Codex engine, check availability:
 
 ```bash
-Bash: node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" setup --json
+Bash: codex-call setup --json
 ```
 
 - If Codex is ready → set `codex_available = true`
@@ -40,10 +40,10 @@ Set `codex_available` once at session start. Do not re-check during the session 
 
 ```bash
 # Enable
-Bash: node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" setup --enable-review-gate --json
+Bash: codex-call setup --enable-review-gate --json
 
 # Disable
-Bash: node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" setup --disable-review-gate --json
+Bash: codex-call setup --disable-review-gate --json
 ```
 
 **Warning:** This creates a Claude/Codex loop that can rapidly consume usage limits.
@@ -53,10 +53,7 @@ Bash: node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" setup --disable-r
 
 ## B. Full Command Reference
 
-All commands use `codex-companion.mjs` via Bash. Companion script path:
-```
-CLAUDE_PLUGIN_ROOT="${HOME}/.claude/plugins/marketplaces/openai-codex/plugins/codex"
-```
+All commands use `codex-call` via Bash. Companion script path:
 
 ### Executor Engine Commands
 
@@ -64,24 +61,24 @@ CLAUDE_PLUGIN_ROOT="${HOME}/.claude/plugins/marketplaces/openai-codex/plugins/co
 
 ```bash
 # Basic usage (dispatch via Bash with run_in_background: true)
-node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" task --background [prompt]
+codex-call task --background [prompt]
 
 # With model selection
-node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" task --background --model gpt-5.4-mini [prompt]
-node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" task --background --model spark --effort medium [prompt]
+codex-call task --background --model gpt-5.4-mini [prompt]
+codex-call task --background --model spark --effort medium [prompt]
 
 # With effort level
-node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" task --background --effort high [prompt]
-node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" task --background --effort xhigh [prompt]
+codex-call task --background --effort high [prompt]
+codex-call task --background --effort xhigh [prompt]
 
 # Resume a previous task session (same repo)
-node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" task --background --resume [prompt]
+codex-call task --background --resume [prompt]
 
 # Fresh start (ignore history)
-node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" task --background --fresh [prompt]
+codex-call task --background --fresh [prompt]
 
 # Wait for completion (short tasks only)
-node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" task --wait [prompt]
+codex-call task --wait [prompt]
 ```
 
 **Parameters:**
@@ -103,13 +100,13 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" task --wait [prompt]
 
 ```bash
 # Basic review (all changes since last commit)
-Bash: node "...codex-companion.mjs" review --background
+Bash: codex-call review --background
 
 # Compare against a specific branch (recommended when working in a worktree)
-Bash: node "...codex-companion.mjs" review --background --base main
+Bash: codex-call review --background --base main
 
 # Wait for result (smaller changesets)
-Bash: node "...codex-companion.mjs" review --wait --base main
+Bash: codex-call review --wait --base main
 ```
 
 **Key characteristics:**
@@ -124,15 +121,15 @@ Bash: node "...codex-companion.mjs" review --wait --base main
 
 ```bash
 # Basic adversarial review
-Bash: node "...codex-companion.mjs" adversarial-review --background
+Bash: codex-call adversarial-review --background
 
 # With branch comparison
-Bash: node "...codex-companion.mjs" adversarial-review --background --base main
+Bash: codex-call adversarial-review --background --base main
 
 # With focus text (directable)
-Bash: node "...codex-companion.mjs" adversarial-review --background look for authentication bypass and injection vectors
-Bash: node "...codex-companion.mjs" adversarial-review --background --base main challenge the caching design and look for race conditions
-Bash: node "...codex-companion.mjs" adversarial-review --background focus on N+1 query patterns and unbounded memory growth
+Bash: codex-call adversarial-review --background look for authentication bypass and injection vectors
+Bash: codex-call adversarial-review --background --base main challenge the caching design and look for race conditions
+Bash: codex-call adversarial-review --background focus on N+1 query patterns and unbounded memory growth
 ```
 
 **Key characteristics:**
@@ -148,7 +145,7 @@ Bash: node "...codex-companion.mjs" adversarial-review --background focus on N+1
 #### `status` — Check job status
 
 ```bash
-Bash: node "...codex-companion.mjs" status [job-id] --json
+Bash: codex-call status [job-id] --json
 ```
 
 Returns: job state (`running`, `completed`, `failed`), elapsed time, brief summary.
@@ -156,7 +153,7 @@ Returns: job state (`running`, `completed`, `failed`), elapsed time, brief summa
 #### `result` — Retrieve job output
 
 ```bash
-Bash: node "...codex-companion.mjs" result [job-id] --json
+Bash: codex-call result [job-id] --json
 ```
 
 Returns: full output + `session-id` which can be used to continue in Codex app:
@@ -167,7 +164,7 @@ codex resume <session-id>
 #### `cancel` — Cancel a running job
 
 ```bash
-Bash: node "...codex-companion.mjs" cancel [job-id] --json
+Bash: codex-call cancel [job-id] --json
 ```
 
 ---
@@ -176,15 +173,15 @@ Bash: node "...codex-companion.mjs" cancel [job-id] --json
 
 ```
 Phase 1: Dispatch (via Bash with run_in_background: true)
-  → Bash: node "...codex-companion.mjs" <command> --background [args]
+  → Bash: codex-call <command> --background [args]
   → Note the job-id from the command response
 
 Phase 2: Poll
-  → Bash: node "...codex-companion.mjs" status <job-id> --json
+  → Bash: codex-call status <job-id> --json
   → Wait until state shows "completed" or "failed"
 
 Phase 3: Retrieve
-  → Bash: node "...codex-companion.mjs" result <job-id> --json
+  → Bash: codex-call result <job-id> --json
   → Save the session-id from the output for activity log
 
 Phase 4: Parse
@@ -196,13 +193,8 @@ Phase 5: Continue
   → If task needs continuation: task --background --resume
 
 Phase 6: Cancel (if needed)
-  → Bash: node "...codex-companion.mjs" cancel <job-id> --json
+  → Bash: codex-call cancel <job-id> --json
   → Then retry or fallback to Claude subagent
-```
-
-**Companion script path (use in all Bash calls):**
-```
-CLAUDE_PLUGIN_ROOT="${HOME}/.claude/plugins/marketplaces/openai-codex/plugins/codex"
 ```
 
 **Polling Interval Guidance:**
@@ -350,17 +342,12 @@ If Codex fails or produces unusable output:
 ## Quick Reference Card
 
 ```
-CHECK      Bash: node "...codex-companion.mjs" setup --json
-EXECUTE    Bash: node "...codex-companion.mjs" task --background [--model X] [--effort Y] [prompt]
-REVIEW     Bash: node "...codex-companion.mjs" review --background [--base <ref>]
-ATTACK     Bash: node "...codex-companion.mjs" adversarial-review --background [--base <ref>] [focus text]
-STATUS     Bash: node "...codex-companion.mjs" status [job-id] --json
-RESULT     Bash: node "...codex-companion.mjs" result [job-id] --json
-CANCEL     Bash: node "...codex-companion.mjs" cancel [job-id] --json
+CHECK      Bash: codex-call setup --json
+EXECUTE    Bash: codex-call task --background [--model X] [--effort Y] [prompt]
+REVIEW     Bash: codex-call review --background [--base <ref>]
+ATTACK     Bash: codex-call adversarial-review --background [--base <ref>] [focus text]
+STATUS     Bash: codex-call status [job-id] --json
+RESULT     Bash: codex-call result [job-id] --json
+CANCEL     Bash: codex-call cancel [job-id] --json
 RESUME     codex resume <session-id>   (in Codex app, not in Claude)
-```
-
-**Companion script path prefix (use in all Bash calls):**
-```
-CLAUDE_PLUGIN_ROOT="${HOME}/.claude/plugins/marketplaces/openai-codex/plugins/codex"
 ```

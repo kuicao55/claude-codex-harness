@@ -3,11 +3,11 @@
 Use this file when Orchestrator chooses Codex as the engine for Executor or Reviewer roles.
 All Codex commands are invoked via `codex-companion.mjs` using the Bash tool.
 
-**Companion script path:**
+**Companion script path (always use Bash, NOT slash commands — slash commands do NOT work in subagent contexts):**
 ```
-CLAUDE_PLUGIN_ROOT="${HOME}/.claude/plugins/marketplaces/openai-codex/plugins/codex"
-node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" <command> [args]
+Bash: codex-call <command> [args]
 ```
+`codex-call` is a wrapper at `${CLAUDE_PLUGIN_ROOT}/scripts/codex-call` that dynamically finds the latest Codex version at runtime.
 
 ---
 
@@ -19,9 +19,7 @@ Also use when a Claude subagent Executor reports BLOCKED and the user chooses Co
 ### Dispatch Template
 
 ```bash
-Bash:
-  command: node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" task --background [--model spark|gpt-5.4-mini] [--effort minimal|low|medium|high|xhigh] [prompt]
-  run_in_background: true
+Bash: codex-call task --background [--model spark|gpt-5.4-mini] [--effort minimal|low|medium|high|xhigh] [prompt]
 ```
 
 After dispatch:
@@ -68,9 +66,7 @@ Requirements:
 When Claude subagent Executor is BLOCKED, dispatch with full context:
 
 ```bash
-Bash:
-  command: node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" task --background [blocked task description + context]
-  run_in_background: true
+Bash: codex-call task --background [blocked task description + context]
 ```
 
 ---
@@ -83,16 +79,12 @@ This is a read-only standard review — cannot be directed with focus text.
 ### Dispatch Template
 
 ```bash
-Bash:
-  command: node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" review --background --base main
-  run_in_background: true
+Bash: codex-call review --background --base main
 ```
 
 For working-tree review (no base branch):
 ```bash
-Bash:
-  command: node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" review --background
-  run_in_background: true
+Bash: codex-call review --background
 ```
 
 ### Polling and Retrieval
@@ -134,9 +126,7 @@ This review IS steerable — provide focus text for security-sensitive areas.
 ### Dispatch Template
 
 ```bash
-Bash:
-  command: node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" adversarial-review --background --base main [focus text]
-  run_in_background: true
+Bash: codex-call adversarial-review --background --base main [focus text]
 ```
 
 ### Polling
@@ -222,13 +212,13 @@ TaskOutput(task_id: "<Claude Code task ID>", block: true, timeout: 300000)
 
 ```bash
 # Check Codex availability
-node "...codex-companion.mjs" setup --json
+codex-call setup --json
 
 # Cancel a stuck task (uses Codex session ID, not Claude Code task ID)
-node "...codex-companion.mjs" cancel [session-id] --json
+codex-call cancel [session-id] --json
 
 # List Codex jobs (uses Codex session IDs)
-node "...codex-companion.mjs" status --all --json
+codex-call status --all --json
 ```
 
 **Important:** `status`, `result`, and `cancel` commands use Codex session IDs (e.g., `019d7fe5-9c56-74f1-9cb7-3b69510f2ae8` from "Thread ready (SESSION-ID)"), NOT Claude Code task IDs. For polling, always use `TaskOutput` tool with the Claude Code task ID.
