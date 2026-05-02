@@ -40,9 +40,9 @@ git branch --show-current
 ```
 
 **If on `main`/`master`:**
-1. Determine the version branch name. Check `status/claude-progress.json` for a saved `version_branch`:
+1. Determine the version branch name. Check `.super-harness/status/claude-progress.json` for a saved `version_branch`:
    ```bash
-   python3 -c "import json; d=json.load(open('status/claude-progress.json')); print(d.get('version_branch', ''))"
+   python3 -c "import json; d=json.load(open('.super-harness/status/claude-progress.json')); print(d.get('version_branch', ''))"
    ```
 2. If `version_branch` exists → checkout that branch
 3. If no `version_branch` → ask the user:
@@ -62,10 +62,10 @@ git branch --show-current
 
 Each milestone gets its own worktree. After a milestone completes, the worktree is merged back into the version branch and deleted.
 
-Read `status/claude-progress.json` to check for an existing worktree for the current milestone:
+Read `.super-harness/status/claude-progress.json` to check for an existing worktree for the current milestone:
 
 ```bash
-python3 -c "import json; d=json.load(open('status/claude-progress.json')); wt=d.get('worktree'); print(wt['path'] + '|' + wt['branch'] if wt else '')"
+python3 -c "import json; d=json.load(open('.super-harness/status/claude-progress.json')); wt=d.get('worktree'); print(wt['path'] + '|' + wt['branch'] if wt else '')"
 ```
 
 **If `worktree` field exists in progress.json AND the worktree directory exists:**
@@ -83,8 +83,8 @@ python3 -c "import json; d=json.load(open('status/claude-progress.json')); wt=d.
    # Branch: harness/<milestone-id>-<short-description>
    # Path: read from harness.config.json worktrees_dir, or default to "worktrees"
    WORKTREES_DIR=$(python3 -c "import json; d=json.load(open('harness.config.json')); print(d.get('worktrees_dir', 'worktrees'))" 2>/dev/null || echo "worktrees")
-   MILESTONE_ID=$(python3 -c "import json; d=json.load(open('status/claude-progress.json')); ms=[m for m in d['milestones'] if not m.get('passed')]; print(ms[0]['id'] if ms else 'unknown')")
-   MILESTONE_TITLE=$(python3 -c "import json; d=json.load(open('status/claude-progress.json')); ms=[m for m in d['milestones'] if not m.get('passed')]; print(ms[0]['title'].split()[0].lower() if ms else 'work')")
+   MILESTONE_ID=$(python3 -c "import json; d=json.load(open('.super-harness/status/claude-progress.json')); ms=[m for m in d['milestones'] if not m.get('passed')]; print(ms[0]['id'] if ms else 'unknown')")
+   MILESTONE_TITLE=$(python3 -c "import json; d=json.load(open('.super-harness/status/claude-progress.json')); ms=[m for m in d['milestones'] if not m.get('passed')]; print(ms[0]['title'].split()[0].lower() if ms else 'work')")
 
    BRANCH_NAME="harness/${MILESTONE_ID}-${MILESTONE_TITLE}"
    WORKTREE_PATH="${WORKTREES_DIR}/${MILESTONE_ID}"
@@ -104,7 +104,7 @@ python3 -c "import json; d=json.load(open('status/claude-progress.json')); wt=d.
 
 **Note:** Each milestone creates its own worktree based on the current version branch (which already contains previous milestones' merged work). When a milestone completes, its worktree is merged back and cleaned up (see Post-Milestone Cleanup below).
 
-Read the plan file. If not specified, ask: "Which plan file should I execute? (path to the `.md` file in `docs/harness/plans/`)"
+Read the plan file. If not specified, ask: "Which plan file should I execute? (path to the `.md` file in `.super-harness/plans/`)"
 
 Review critically — identify questions or concerns. If the plan has critical gaps, raise them with the user before starting.
 
@@ -126,7 +126,7 @@ After reading the plan file:
 Run Codex availability check:
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" setup --json
+Bash: codex-call setup --json
 ```
 
 - If Codex is ready → set `codex_available = true`
@@ -230,13 +230,15 @@ The dispatch mechanism depends on the engine selected in Step 3:
 → Use `Agent` tool (Task/Subagent) with the corresponding prompt template
 
 **Codex engines (Codex review, Codex adversarial-review, Codex rescue):**
-→ Use `Bash` tool to call `codex-companion.mjs` directly. The companion script is the actual implementation behind slash commands and works from sub-agent contexts.
-→ Codex availability detection sets `CLAUDE_PLUGIN_ROOT`. If not set, use:
-  `CLAUDE_PLUGIN_ROOT="${HOME}/.claude/plugins/marketplaces/openai-codex/plugins/codex"`
+→ Use `Bash` tool to call `codex-call` — a wrapper script that dynamically finds the latest Codex version. **Slash commands like `/codex:review` do NOT work in sub-agent contexts** — they only work in the main session.
+  ```
+  Bash: codex-call <command> [args]
+  ```
+  The wrapper is at `${CLAUDE_PLUGIN_ROOT}/scripts/codex-call` and resolves the Codex companion path at runtime.
 → Examples:
-  - Spec Review (Codex): `Bash(node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" review --background --base main)`
-  - Code Quality Review (Codex): `Bash(node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" adversarial-review --background --base main [focus text])`
-  - Executor rescue (Codex): `Bash(node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" task --background [--model X] [--effort Y] [prompt])`
+  - Spec Review (Codex): `Bash(codex-call review --background --base main)`
+  - Code Quality Review (Codex): `Bash(codex-call adversarial-review --background --base main [focus text])`
+  - Executor rescue (Codex): `Bash(codex-call task --background [--model X] [--effort Y] [prompt])`
 
 → After dispatch:
    1. Note the **Claude Code task ID** from the Bash response (e.g., `btxsezqf1`)
@@ -319,9 +321,17 @@ Orchestrator calls `harness:tdd-audit` with:
 
 | TDD_AUDIT Result | Action |
 | ---------------- | ------ |
-| `PASS`           | Proceed to Step 2: Spec Review Decision Point |
+| `PASS`           | Stage and commit, then proceed to Step 2: Spec Review Decision Point |
 | `FAIL`           | Report `Status: PROCESS_VIOLATION` to Executor. Return to Executor for re-implementation. Do not proceed to Spec Review. |
 | `CANNOT_VERIFY`  | Treat as FAIL. Return to Executor for re-implementation with PROCESS_VIOLATION. |
+
+**After TDD Audit PASS — Stage and commit before review:**
+
+```bash
+git add -A && git commit -m "Task <N>: <task-title>"
+```
+
+This ensures all new files (including untracked) are committed before Spec Review runs. Codex review (`--base`) only sees tracked/staged changes — untracked files would be invisible to the reviewer.
 
 **PROCESS_VIOLATION retry limit:** If the same task receives PROCESS_VIOLATION 2 times, escalate to user:
 
@@ -335,17 +345,14 @@ After escalation, invoke `activity-logging` with the PROCESS_VIOLATION count.
 
 **If Codex rescue chosen:**
 
-Dispatch using `codex-companion.mjs` via Bash. Set `CLAUDE_PLUGIN_ROOT` if not available:
-
 ```
-Bash:
-command: node "${CLAUDE_PLUGIN_ROOT:-${HOME}/.claude/plugins/marketplaces/openai-codex/plugins/codex}/scripts/codex-companion.mjs" task --background [--model X] [--effort Y] [prompt]
+Bash: codex-call task --background [--model X] [--effort Y] [prompt]
 run_in_background: true
 ```
 
 1. Note the `job-id` returned in the command output
-2. Poll: `Bash(node "...codex-companion.mjs" status [job-id] --json)` — wait for `"state": "completed"`
-3. Retrieve: `Bash(node "...codex-companion.mjs" result [job-id] --json)`
+2. Poll: `Bash(codex-call status [job-id] --json)` — wait for `"state": "completed"`
+3. Retrieve: `Bash(codex-call result [job-id] --json)`
 4. Map Codex output to Executor report format (see `codex-review-prompt.md`) and continue as dispatched Executor output
 5. Proceed to Spec Review Decision Point
 
@@ -354,7 +361,7 @@ run_in_background: true
 **Using pre-configured Spec Review engine:**
 - Claude subagent → use `Agent` tool with `spec-reviewer-prompt.md`
 - Codex review:
-  1. Dispatch: `Bash(node "...codex-companion.mjs" review --background --base main)` with `run_in_background: true`
+  1. Dispatch: `Bash(codex-call review --background --base main)` with `run_in_background: true`
   2. Note the Claude Code task ID from the response
   3. Poll: `TaskOutput(task_id: "<task-id>", block: true, timeout: 300000)` — wait for completion
   4. Parse the `output` field for verdict (look for "Reviewer finished" = SPEC_COMPLIANT, or issues found = SPEC_ISSUES)
@@ -388,7 +395,7 @@ Handle Spec Reviewer verdict:
 **Using pre-configured Code Quality Review engine:**
 - Claude subagent → use `Agent` tool with `code-quality-reviewer-prompt.md`
 - Codex adversarial-review:
-  1. Dispatch: `Bash(node "...codex-companion.mjs" adversarial-review --background --base main [focus text])` with `run_in_background: true`
+  1. Dispatch: `Bash(codex-call adversarial-review --background --base main [focus text])` with `run_in_background: true`
   2. Note the Claude Code task ID from the response
   3. Poll: `TaskOutput(task_id: "<task-id>", block: true, timeout: 300000)` — wait for completion
   4. Parse the `output` field for verdict (look for Critical/Important issues = FAIL, only Minor = PASS)

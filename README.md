@@ -32,11 +32,11 @@ A Claude Code skill plugin for structured, long-running software development pro
 | **Dual-engine roles**               | Each role can use Claude subagent or Codex (`/codex:rescue`, `/codex:review`, `/codex:adversarial-review`). Engine choice is explicitly confirmed with the user at every task stage. |
 | **Unified command routing**         | All `/super-harness:` commands route through `harness-entry` for consistent cross-cutting concern initialization.                                                                          |
 | **Live Todo progress**              | During execution, Orchestrator maintains a live TodoWrite list (task + sub-step level: Executor → TDD Audit → Spec Review → Code Quality Review → Logging).                                |
-| **Cross-session progress**          | `status/claude-progress.json` tracks milestones across sessions. Step-level tracking via `current_task` field + human-readable `status/PROGRESS.md`.                                  |
-| **Activity logging**                | Every completed task logged to `logs/activity-YYYY-MM-DD.jsonl` — engine used, Codex session IDs, review verdicts, deferred items, PROCESS_VIOLATION events.                           |
+| **Cross-session progress**          | `.super-harness/status/claude-progress.json` tracks milestones across sessions. Step-level tracking via `current_task` field + human-readable `.super-harness/status/PROGRESS.md`.                                  |
+| **Activity logging**                | Every completed task logged to `.super-harness/logs/activity-YYYY-MM-DD.jsonl` — engine used, Codex session IDs, review verdicts, deferred items, PROCESS_VIOLATION events.                           |
 | **Visual Companion**                | Optional browser UI during brainstorming for mockups, architecture diagrams, and design option cards.                                                                                |
 | **TDD Process Enforcement**         | Mandatory TDD Audit gate, Rationalization Counter-Tables, Red Flags STOP rules, Regression Test Validation Pattern, PROCESS_VIOLATION status for TDD violations.                        |
-| **Session Handoffs**                | `harness-handoff` creates Handoff Documents (`docs/harness/handoffs/`). `/super-harness:resume` loads them. Context resets on milestone completion. Each milestone = one session.        |
+| **Session Handoffs**                | `harness-handoff` creates Handoff Documents (`.super-harness/handoffs/`). `/super-harness:resume` loads them. Context resets on milestone completion. Each milestone = one session.        |
 
 ---
 
@@ -275,7 +275,7 @@ flowchart TD
     C3 -->|no| C5
     C4 --> C5[Explore idea + clarify]
     C5 --> C6[Propose 2-3 approaches]
-    C6 --> C7["Write design spec (docs/harness/specs/)"]
+    C6 --> C7["Write design spec (.super-harness/specs/)"]
     C7 --> C8[Spec self-review]
     C8 --> C9{User approves?}
     C9 -->|revise| C7
@@ -330,7 +330,7 @@ flowchart TD
     C -->|no| D["Ask: brainstorm / plan / execute?"]
     C -->|yes| E[Parse + display milestone status]
     E --> F["Read activity log (last 5 entries)"]
-    F --> Fb["Load Handoff Document (if exists in docs/harness/handoffs/)"]
+    F --> Fb["Load Handoff Document (if exists in .super-harness/handoffs/)"]
     Fb --> G[Surface deferred items + re-implementation history]
     G --> H{Dependency check passes?}
     H -->|warning| I[Warn about unmet dependency]
@@ -378,13 +378,13 @@ flowchart LR
 
 Every `/super-harness:*` command runs a **pre-flight check** first (`scripts/harness-preflight`), which:
 
-1. Detects whether this is a **fresh project** (no `status/claude-progress.json`) or **existing project**
+1. Detects whether this is a **fresh project** (no `.super-harness/status/claude-progress.json`) or **existing project**
 2. Creates the harness directory structure automatically if missing:
-   - `status/` — milestone tracking
-   - `docs/harness/specs/` — design specs
-   - `docs/harness/plans/` — implementation plans
-   - `docs/harness/handoffs/` — session handoff documents
-   - `logs/` — activity logs
+   - `.super-harness/status/` — milestone tracking
+   - `.super-harness/specs/` — design specs
+   - `.super-harness/plans/` — implementation plans
+   - `.super-harness/handoffs/` — session handoff documents
+   - `.super-harness/logs/` — activity logs
 3. Warns if not a git repository (git is required for activity logging and handoffs)
 4. For existing projects: validates that all referenced spec/plan files still exist on disk
 
@@ -426,7 +426,7 @@ User runs any /super-harness:* command
 │  → ask questions             │
 │  → propose approaches        │
 │  → write design spec         │
-│    docs/harness/specs/       │
+│    .super-harness/specs/       │
 │    YYYY-MM-DD-<topic>-design │
 │  → you approve spec          │
 └──────────────────────────────┘
@@ -504,7 +504,7 @@ Same flow as Scenario A
 ┌──────────────────────────────────────────────┐
 │  harness-entry (resume mode)                  │
 │                                              │
-│  1. Read docs/harness/handoffs/handoff.md     │
+│  1. Read .super-harness/handoffs/handoff.md     │
 │     (single file, always current)            │
 │                                              │
 │  3. Validate: spec + plan + progress          │
@@ -528,7 +528,7 @@ Same flow as Scenario A
         └── ALL_DONE  → prompt: finish / new project
 ```
 
-**Resume reads the single handoff file `docs/harness/handoffs/handoff.md`.**
+**Resume reads the single handoff file `.super-harness/handoffs/handoff.md`.**
 
 The handoff document is managed by `scripts/harness-handoff` — always overwritten, never creates duplicate files. Historical state is preserved in `claude-progress.json` and activity logs.
 
@@ -546,7 +546,7 @@ Two entry points depending on whether you need to design a new feature or alread
 │  → explore + design new      │
 │    feature spec              │
 │  → write to NEW spec file    │
-│    docs/harness/specs/       │
+│    .super-harness/specs/       │
 │    YYYY-MM-DD-<topic>-design │
 │  → you approve spec          │
 └──────────────────────────────┘
@@ -787,7 +787,7 @@ Worktrees are cleaned up automatically after merge or PR.
 | `harness-parallel-dispatch` | Independence check, parallel Executor dispatch, conflict resolution before merge.               |
 | `harness:codex-integration`         | Full Codex operations manual: commands, polling, output-to-verdict mapping, token cost table.   |
 | `harness:activity-logging`          | Post-task JSONL logging with executor engine, reviewer engine, Codex session IDs, notes.        |
-| `harness:progress-management`       | CRUD for `status/claude-progress.json` milestone tracking. Step-level tracking (`current_task` field) + PROGRESS.md companion file. |
+| `harness:progress-management`       | CRUD for `.super-harness/status/claude-progress.json` milestone tracking. Step-level tracking (`current_task` field) + PROGRESS.md companion file. |
 | `harness-tdd-audit`         | TDD Process Audit: verifies Executor completed tasks with genuine TDD discipline (file order, RED-first, non-hollow tests, coverage). |
 | `harness-handoff`       | Session initializer: packages state into Handoff Document, triggers `/clear` for fresh context. Manual call, milestone completion, or 5-task threshold trigger. |
 
@@ -885,21 +885,20 @@ super-harness/
 
 ```
 your-project/
-  status/
-    claude-progress.json            # Milestone tracker (large projects only)
-    PROGRESS.md                     # Human-readable progress companion (auto-generated)
-  docs/
-    harness/
-      specs/
-        YYYY-MM-DD-<topic>-design.md    # Design specs from brainstorming
-      plans/
-        YYYY-MM-DD-milestone-N.md       # Per-session implementation plans
-      handoffs/
-        handoff.md                   # Single handoff document (managed by scripts/harness-handoff)
-  logs/
-    activity-YYYY-MM-DD.jsonl       # Daily activity log
-  .harness/                         # Visual Companion session files
-                                    # ← add to .gitignore
+  .super-harness/
+    status/
+      claude-progress.json            # Milestone tracker (large projects only)
+      PROGRESS.md                     # Human-readable progress companion (auto-generated)
+      PROJECT.md                      # Project context (generated by init)
+    specs/
+      YYYY-MM-DD-<topic>-design.md    # Design specs from brainstorming
+    plans/
+      YYYY-MM-DD-milestone-N.md       # Per-session implementation plans
+    handoffs/
+      handoff.md                   # Single handoff document (managed by scripts/harness-handoff)
+    logs/
+      activity-YYYY-MM-DD.jsonl       # Daily activity log
+    brainstorm/                       # Visual Companion session files (add to .gitignore)
 ```
 
 ---

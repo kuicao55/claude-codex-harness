@@ -32,11 +32,11 @@ Invoke immediately after every task that receives a Code Quality Review PASS ver
 
 ## Log File Location and Format
 
-**File:** `logs/activity-YYYY-MM-DD.jsonl` (one file per calendar day, in the project repo)
+**File:** `.super-harness/logs/activity-YYYY-MM-DD.jsonl` (one file per calendar day, in the project repo)
 
 **Format:** JSONL — one JSON object per line, newline-delimited. Append only.
 
-**Directory:** Ensure `logs/` exists: `mkdir -p logs`
+**Directory:** Ensure `.super-harness/logs/` exists: `mkdir -p .super-harness/logs`
 
 ---
 
@@ -44,7 +44,7 @@ Invoke immediately after every task that receives a Code Quality Review PASS ver
 
 Before writing the first entry of a session, generate the `session_id` and `session_start_date`:
 
-1. Check if `logs/activity-YYYY-MM-DD.jsonl` exists for today
+1. Check if `.super-harness/logs/activity-YYYY-MM-DD.jsonl` exists for today
 2. If the file EXISTS:
    - Read all existing lines and extract the `session_id` field from each
    - Find the highest `NNN` suffix (e.g. `session-2026-04-07-003` → NNN = 3)
@@ -90,7 +90,7 @@ Each entry is a single JSON object on one line:
 | `timestamp`           | ISO 8601       | When the log entry was written                                                                                       |
 | `session_id`          | string         | `"session-YYYY-MM-DD-NNN"` — see Session ID Generation above                                                         |
 | `session_start_date`  | string         | `"YYYY-MM-DD"` — the date when this session started (for cross-midnight aggregation)                                |
-| `milestone_id`        | string or null | The milestone ID from `claude-progress.json`, or `null` for small projects                                           |
+| `milestone_id`        | string or null | The milestone ID from `.super-harness/status/claude-progress.json`, or `null` for small projects                                           |
 | `task_id`             | string         | `"task-N"` matching the task number in the plan                                                                      |
 | `task_title`          | string         | Short description of the task                                                                                        |
 | `phase`               | enum           | `"brainstorming"` \| `"planning"` \| `"execution"`                                                                   |
@@ -120,15 +120,15 @@ Each entry is a single JSON object on one line:
 1. Gather the information from the current execution context
 2. Generate or reuse the `session_id` (see Session ID Generation)
 3. Construct the JSON object (single line, no pretty printing)
-4. **Append** to `logs/activity-YYYY-MM-DD.jsonl` using `echo ... >>`:
+4. **Append** to `.super-harness/logs/activity-YYYY-MM-DD.jsonl` using `echo ... >>`:
 
 ```bash
-echo '{"timestamp":"...","session_id":"...","milestone_id":"...","task_id":"...","task_title":"...","phase":"execution","action":"...","executor_status":"DONE","spec_review_status":"SPEC_COMPLIANT","code_quality_status":"PASS","executor_engine":"claude-subagent","reviewer_engine":"claude-subagent","codex_session_id":null,"codex_model":null,"codex_effort":null,"files_changed":["..."],"notes":null}' >> logs/activity-2026-04-07.jsonl
+echo '{"timestamp":"...","session_id":"...","milestone_id":"...","task_id":"...","task_title":"...","phase":"execution","action":"...","executor_status":"DONE","spec_review_status":"SPEC_COMPLIANT","code_quality_status":"PASS","executor_engine":"claude-subagent","reviewer_engine":"claude-subagent","codex_session_id":null,"codex_model":null,"codex_effort":null,"files_changed":["..."],"notes":null}' >> .super-harness/logs/activity-2026-04-07.jsonl
 ```
 
 **⚠️ CRITICAL: Do NOT use the `Write` tool on the log file.** The `Write` tool overwrites the entire file, destroying all previous entries. Always use bash `echo ... >>` to append a single new line.
 
-5. Commit: `git add logs/ && git commit -m "harness: log task-N completion"`
+5. Commit: `git add .super-harness/logs/ && git commit -m "harness: log task-N completion"`
 
 ---
 
@@ -146,14 +146,14 @@ When resuming, collect activity log entries by `session_id` rather than by date 
 
 1. From the handoff document, read the `session_id` of the previous session
 2. From the handoff document, read the `session_start_date`
-3. Read ALL `logs/activity-*.jsonl` files from `session_start_date` through today
+3. Read ALL `.super-harness/logs/activity-*.jsonl` files from `session_start_date` through today
 4. Filter entries matching the target `session_id`
 5. Display in chronological order
 
 When displaying the resume summary, the entry skill shows recent log entries:
 
 ```
-Recent activity (from logs/activity-2026-04-07.jsonl and logs/activity-2026-04-08.jsonl):
+Recent activity (from .super-harness/logs/activity-2026-04-07.jsonl and .super-harness/logs/activity-2026-04-08.jsonl):
   14:32 — task-3 PASS (DONE → SPEC_COMPLIANT → PASS) [engine: claude-subagent / claude-subagent]
   14:55 — task-4 PASS (DONE → SPEC_COMPLIANT → FAIL_THEN_PASS — Reviewer found null check missing at line 42) [engine: claude-subagent / codex-adversarial-review]
   15:20 — task-5 BLOCKED — Codex rescue invoked, session: session-abc123
@@ -174,7 +174,7 @@ For non-execution phases, use simplified entries:
   "task_id": "brainstorm-session",
   "task_title": "Project brainstorming session",
   "phase": "brainstorming",
-  "action": "Completed brainstorming for task-manager project. Spec saved to docs/harness/specs/2026-04-01-task-manager-design.md",
+  "action": "Completed brainstorming for task-manager project. Spec saved to .super-harness/specs/2026-04-01-task-manager-design.md",
   "executor_status": "SKIPPED",
   "spec_review_status": "SKIPPED",
   "code_quality_status": "SKIPPED",
@@ -183,7 +183,7 @@ For non-execution phases, use simplified entries:
   "codex_session_id": null,
   "codex_model": null,
   "codex_effort": null,
-  "files_changed": ["docs/harness/specs/2026-04-01-task-manager-design.md"],
+  "files_changed": [".super-harness/specs/2026-04-01-task-manager-design.md"],
   "notes": "User prefers REST over GraphQL. Authentication deferred to milestone-1."
 }
 ```

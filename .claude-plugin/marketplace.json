@@ -11,14 +11,23 @@
         "path": "."
       },
       "description": "Structured development workflow with Orchestrator / Executor / Reviewer architecture, cross-session progress tracking, activity logging, Visual Companion, and dual-engine Codex integration",
-      "version": "3.5.1",
+      "version": "3.5.2-dev007",
       "author": {
         "name": "kuicao55"
       },
       "homepage": "https://github.com/kuicao55/super-harness",
       "repository": "https://github.com/kuicao55/super-harness",
       "license": "MIT",
-      "keywords": ["workflow", "tdd", "progress-tracking", "codex", "orchestrator", "executor", "reviewer", "visual-companion"]
+      "keywords": [
+        "workflow",
+        "tdd",
+        "progress-tracking",
+        "codex",
+        "orchestrator",
+        "executor",
+        "reviewer",
+        "visual-companion"
+      ]
     }
   ]
 }

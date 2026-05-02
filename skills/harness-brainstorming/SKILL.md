@@ -15,7 +15,7 @@ Turn ideas into fully formed designs and specs through natural collaborative dia
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 super-harness v<VERSION>
 
-请告诉我你想要开发什么功能？
+欢迎使用 super-harness v<VERSION>
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -32,7 +32,7 @@ Do NOT invoke any implementation skill, write any code, scaffold any project, or
 
 You MUST create a task for each of these items and complete them in order:
 
-0. **Load PROJECT.md** — check if `status/PROJECT.md` exists
+0. **Load PROJECT.md** — check if `.super-harness/status/PROJECT.md` exists
    - If exists → read it and use as the primary context for project background
    - If not exists → detect project state:
      1. Check for existing source files or package configs:
@@ -53,7 +53,7 @@ You MUST create a task for each of these items and complete them in order:
 3. **Scope assessment** — is this one project or multiple independent subsystems? If multiple, decompose immediately (see Scope Decomposition below)
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Present design** — in sections scaled to complexity, get user approval after each section
-6. **Write design doc** — save to `docs/harness/specs/YYYY-MM-DD-<topic>-design.md`
+6. **Write design doc** — save to `.super-harness/specs/YYYY-MM-DD-<topic>-design.md`
 7. **Spec self-review** — scan for placeholders, contradictions, ambiguity, scope issues (fix inline)
 8. **User reviews written spec** — ask user to review before proceeding
 9. **Scale assessment** — briefly assess: single session or multi-session project? (feeds into plan-writing)
@@ -133,7 +133,7 @@ Don't spend time refining details of Component B if Component A doesn't exist ye
 
 ### Write the Spec
 
-Save to: `docs/harness/specs/YYYY-MM-DD-<topic>-design.md`
+Save to: `.super-harness/specs/YYYY-MM-DD-<topic>-design.md`
 
 Spec document structure:
 

@@ -7,14 +7,14 @@ PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
 
 # Check for an existing project progress file
 PROGRESS_FILE=""
-if [[ -f "status/claude-progress.json" ]]; then
-  PROGRESS_FILE="status/claude-progress.json"
+if [[ -f ".super-harness/status/claude-progress.json" ]]; then
+  PROGRESS_FILE=".super-harness/status/claude-progress.json"
 elif [[ -f "claude-progress.json" ]]; then
   PROGRESS_FILE="claude-progress.json"
 fi
 
 # Build the context message
-CONTEXT="harness is active (v3.5.1 — Orchestrator / Executor / Reviewer architecture).
+CONTEXT="harness is active (v3.5.2-dev007 — Orchestrator / Executor / Reviewer architecture).
 
 Available commands:
   /super-harness:brainstorm  — Start structured brainstorming (with optional Visual Companion and scope decomposition)
@@ -30,7 +30,7 @@ Architecture:
   Each role can use Claude subagent or Codex engine (/codex:rescue, /codex:review, /codex:adversarial-review).
   All implementation happens in a git worktree (created on first execution, shared across milestones).
 
-Session boundary: Every session ends with a handoff document at docs/harness/handoffs/. Resume reads this to restore context.
+Session boundary: Every session ends with a handoff document at .super-harness/handoffs/. Resume reads this to restore context.
 
 Available skills:
   harness:harness-brainstorming   — Structured brainstorming with visual companion
@@ -83,4 +83,4 @@ output = {
     }
 }
 print(json.dumps(output))
-" "$CONTEXT" 2>/dev/null || echo "{\"hookSpecificOutput\": {\"additionalContext\": \"harness v3.5.1 active. Commands: /super-harness:brainstorm, /super-harness:plan, /super-harness:execute, /super-harness:resume, /super-harness:status\"}}"
+" "$CONTEXT" 2>/dev/null || echo "{\"hookSpecificOutput\": {\"additionalContext\": \"harness v3.5.2-dev007 active. Commands: /super-harness:brainstorm, /super-harness:plan, /super-harness:execute, /super-harness:resume, /super-harness:status\"}}"

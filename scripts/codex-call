@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# Codex companion wrapper — resolves the latest Codex version and delegates all arguments
+# Works from sub-agent contexts where slash commands are not intercepted.
+#
+# Usage:
+#   codex-call <command> [args...]
+#
+# Examples:
+#   codex-call setup --json
+#   codex-call task --background "implement login"
+#   codex-call review --background --base main
+#
+# Environment:
+#   CODEX_CACHE_DIR: Override cache directory (defaults to ~/.claude/plugins/cache/openai-codex/codex)
+
+set -e
+
+CODEX_CACHE_DIR="${CODEX_CACHE_DIR:-${HOME}/.claude/plugins/cache/openai-codex/codex}"
+
+# Find the latest Codex version by sorting version directories
+find_latest_version() {
+    local base="$1"
+    if [[ ! -d "$base" ]]; then
+        echo "ERROR: Codex cache directory not found: $base" >&2
+        echo "ERROR: Is Codex installed? Run: npm install -g @openai/codex" >&2
+        exit 1
+    fi
+
+    # Get the latest version directory (sorted by version number)
+    local latest
+    latest=$(ls "$base" 2>/dev/null | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)
+
+    if [[ -z "$latest" ]]; then
+        echo "ERROR: No Codex version found in $base" >&2
+        exit 1
+    fi
+
+    echo "$base/$latest"
+}
+
+# Resolve the latest Codex scripts directory
+CODEX_SCRIPTS_DIR="$(find_latest_version "$CODEX_CACHE_DIR")/scripts"
+CODEX_COMPANION="$CODEX_SCRIPTS_DIR/codex-companion.mjs"
+
+if [[ ! -f "$CODEX_COMPANION" ]]; then
+    echo "ERROR: codex-companion.mjs not found at: $CODEX_COMPANION" >&2
+    echo "ERROR: Codex installation may be corrupted." >&2
+    exit 1
+fi
+
+# Delegate to the actual companion script with all arguments
+exec node "$CODEX_COMPANION" "$@"

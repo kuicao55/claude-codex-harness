@@ -1,11 +1,11 @@
 ---
 name: harness-init
-description: "Reads the entire codebase and generates status/PROJECT.md with tech stack, functional modules, architectural decisions, and current harness state."
+description: "Reads the entire codebase and generates .super-harness/status/PROJECT.md with tech stack, functional modules, architectural decisions, and current harness state."
 ---
 
 # Harness Init — Project Context Generation
 
-Generate a comprehensive `status/PROJECT.md` by reading the entire codebase.
+Generate a comprehensive `.super-harness/status/PROJECT.md` by reading the entire codebase.
 
 **Announce at start:** "I'm using the harness-init skill to analyze this codebase and generate the project context document."
 
@@ -19,11 +19,16 @@ Generate a comprehensive `status/PROJECT.md` by reading the entire codebase.
 ### Step 1: Run Pre-flight Check
 
 ```bash
-# Ensure directories exist before generating context
-mkdir -p status docs/harness/specs docs/harness/plans docs/harness/handoffs logs 2>/dev/null || true
+# Ensure all harness directories exist (mkdir -p is safe even if they already exist)
+mkdir -p .super-harness/status
+mkdir -p .super-harness/specs
+mkdir -p .super-harness/plans
+mkdir -p .super-harness/handoffs
+mkdir -p .super-harness/logs
+echo "Directory structure ready."
 ```
 
-Ensure directories exist before generating context.
+**Important:** Use separate `mkdir -p` commands for each directory. This ensures that if one fails (e.g., permissions issue), it's visible rather than silently hidden. `mkdir -p` will not error if the directory already exists.
 
 ### Step 2: Detect Project Type
 
@@ -72,14 +77,29 @@ From reading source files and docs, identify:
 
 ### Step 6: Check Harness State
 
-If `status/claude-progress.json` exists:
+If `.super-harness/status/claude-progress.json` exists:
 - Read current milestone and progress
 - Read active branch from `git branch --show-current`
 - List existing milestones
 
-### Step 7: Generate PROJECT.md
+### Step 7: Detect Project Categories
 
-Write to `status/PROJECT.md`:
+Based on the files found in Steps 2-5, detect which categories apply:
+
+**Web API:** Presence of FastAPI, Flask, Express, Django, Rails, etc. with route definitions
+**CLI Tool:** Presence of console_scripts, click, typer, argparse, or CLI entry points
+**Frontend App:** Presence of React, Vue, Angular, Svelte, or SPA (single HTML with embedded JS)
+**Library/Package:** Pure code library with no web/CLI interface (src/, __init__.py, exports)
+**Full-stack:** Both Web API + Frontend App detected
+**Database-backed:** Presence of SQLAlchemy, Prisma, Django ORM, migration folders, *.sql files
+**External Dependencies:** Tailscale, Docker, systemd, cron, or other system-level integrations
+**Complex Config:** Multiple config files (.env, config.yaml, settings.py, etc.)
+
+### Step 8: Generate PROJECT.md
+
+Write to `.super-harness/status/PROJECT.md`. **Include sections conditionally based on detected categories from Step 7.**
+
+#### Always Include (all projects)
 
 ```markdown
 # Project Context
@@ -89,7 +109,8 @@ Write to `status/PROJECT.md`:
 ## Project Identity
 
 **Project Name:** <from git remote or directory name>
-**Harness Version:** 3.2.0
+**Project Overview:** <2-3 sentences explaining what this project does and who it's for>
+**Harness Version:** <harness version>
 **Generated:** <YYYY-MM-DD>
 **Last Updated:** <YYYY-MM-DD>
 
@@ -118,6 +139,96 @@ Write to `status/PROJECT.md`:
 <project root tree - top 2-3 levels, key directories only>
 ```
 
+## Getting Started
+
+**Installation:** <how to install dependencies>
+**Run:** <how to start/run the project>
+**Config:** <environment variables or config files needed>
+```
+
+#### Conditional Sections (include if detected)
+
+**If Web API detected:**
+```markdown
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/processes` | List all processes |
+| ... | ... | ... |
+
+## Data Models
+
+| Model | Fields | Location |
+|-------|--------|----------|
+| Process | id, name, pid, status | backend/models.py |
+| ... | ... | ... |
+```
+
+**If CLI Tool detected:**
+```markdown
+## CLI Commands
+
+| Command | Usage | Description |
+|---------|-------|-------------|
+| `pocketmon list` | `pocketmon list [options]` | List all monitored processes |
+| ... | ... | ... |
+```
+
+**If Frontend App detected:**
+```markdown
+## Pages / Routes
+
+| Page | Route | Description |
+|------|-------|-------------|
+| Dashboard | `/` | Main process monitoring dashboard |
+| Settings | `/settings` | Configuration panel |
+```
+
+**If Database-backed detected:**
+```markdown
+## Data Storage
+
+- **Type:** <SQLite / PostgreSQL / MySQL / etc.>
+- **ORM:** <SQLAlchemy / Prisma / Django ORM / etc.>
+- **Location:** <database file path or connection string>
+- **Migrations:** <migration tool and location if applicable>
+```
+
+**If External Dependencies detected:**
+```markdown
+## External Dependencies
+
+| Dependency | Purpose | Integration |
+|------------|---------|-------------|
+| Tailscale | Remote access | HTTP API at `/api/tailscale/*` |
+| cron | Scheduled tasks | Via `~/.pocketmon_crons` flat file |
+```
+
+**If Complex Config detected:**
+```markdown
+## Configuration
+
+| Config File | Purpose | Key Settings |
+|-------------|---------|--------------|
+| `.env` | Environment variables | `DATABASE_URL`, `API_KEY` |
+| `config.yaml` | Application config | `log_level`, `refresh_interval` |
+```
+```
+
+**If Library/Package detected:**
+```markdown
+## Public API
+
+| Export | Signature | Description |
+|--------|----------|-------------|
+| `from project import X` | `X(arg1, arg2)` | Description |
+```
+```
+
+#### Always Include (footer)
+
+```markdown
 ## Completed Milestones
 
 | Milestone | Title | Tasks | Completed |
@@ -130,27 +241,28 @@ Write to `status/PROJECT.md`:
 **Commands:** `/super-harness:brainstorm`, `/super-harness:plan`, `/super-harness:execute`, `/super-harness:resume`, `/super-harness:status`, `/super-harness:init`, `/super-harness:handoff`
 
 **Key Files:**
-- `status/claude-progress.json` — Milestone tracker
-- `status/PROJECT.md` — This file
-- `docs/harness/specs/` — Design specs
-- `docs/harness/plans/` — Implementation plans
-- `docs/harness/handoffs/` — Session handoffs
-- `logs/activity-YYYY-MM-DD.jsonl` — Activity logs
+- `.super-harness/status/claude-progress.json` — Milestone tracker
+- `.super-harness/status/PROJECT.md` — This file
+- `.super-harness/specs/` — Design specs
+- `.super-harness/plans/` — Implementation plans
+- `.super-harness/handoffs/` — Session handoffs
+- `.super-harness/logs/activity-YYYY-MM-DD.jsonl` — Activity logs
 ```
 
-### Step 8: Commit
+### Step 9: Commit
 
 ```bash
-git add status/PROJECT.md && git commit -m "harness: generate project context"
+git add .super-harness/status/PROJECT.md && git commit -m "harness: generate project context"
 ```
 
-### Step 9: Confirm with User
+### Step 10: Confirm with User
 
-> "Project context generated and saved to `status/PROJECT.md`.
+> "Project context generated and saved to `.super-harness/status/PROJECT.md`.
 >
 > Summary:
 > - Tech stack: <stack>
 > - Modules: <N> modules found
+> - Detected categories: <Web API, CLI Tool, etc.>
 > - Current milestone: <id> — <title>
 >
 > What's next?

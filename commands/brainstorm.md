@@ -2,7 +2,22 @@
 description: "Start a new feature or project with structured brainstorming. Explores intent, requirements, and design before any implementation."
 ---
 
-Ask the user for the exact feature/problem first:
+Show version banner first:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+super-harness v<VERSION>
+
+欢迎使用 super-harness v<VERSION>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+获取版本号：
+```bash
+python3 -c "import json; print(json.load(open('.claude-plugin/plugin.json'))['version'])"
+```
+
+Then ask for the exact feature/problem:
 
 > "这次要 brainstorm 的具体功能或问题是什么？请尽量描述目标、当前现象和期望结果。"
 

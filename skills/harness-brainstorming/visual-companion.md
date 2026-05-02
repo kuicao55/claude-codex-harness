@@ -32,13 +32,13 @@ The server watches a directory for HTML files and serves the newest one to the b
 skills/harness-brainstorming/scripts/start-server.sh --project-dir /path/to/project
 
 # Returns: {"type":"server-started","port":52341,"url":"http://localhost:52341",
-#           "screen_dir":"/path/to/project/.harness/brainstorm/12345-1706000000/content",
-#           "state_dir":"/path/to/project/.harness/brainstorm/12345-1706000000/state"}
+#           "screen_dir":"/path/to/project/.super-harness/brainstorm/12345-1706000000/content",
+#           "state_dir":"/path/to/project/.super-harness/brainstorm/12345-1706000000/state"}
 ```
 
 Save `screen_dir` and `state_dir` from the response. Tell the user to open the URL.
 
-**Note:** Pass `--project-dir` so mockups persist in `.harness/brainstorm/`. Remind the user to add `.harness/` to `.gitignore`.
+**Note:** Pass `--project-dir` so mockups persist in `.super-harness/brainstorm/`. Remind the user to add `.super-harness/` to `.gitignore`.
 
 **Platform notes:**
 
@@ -179,7 +179,7 @@ Multi-select: `<div class="options" data-multiselect>`
 skills/harness-brainstorming/scripts/stop-server.sh $SESSION_DIR
 ```
 
-Mockup files persist in `.harness/brainstorm/` when using `--project-dir`.
+Mockup files persist in `.super-harness/brainstorm/` when using `--project-dir`.
 
 ## Reference
 

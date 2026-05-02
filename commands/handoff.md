@@ -1,5 +1,5 @@
 ---
-description: "Manually trigger session handoff. Packages current session state into a Handoff Document and triggers /clear for a fresh context. Normally called automatically at session boundaries."
+description: "Manually trigger session handoff. Packages current session state into a Handoff Document at .super-harness/handoffs/handoff.md and triggers /clear for a fresh context. Normally called automatically at session boundaries."
 ---
 
 Invoke the `harness-handoff` skill with context: this is a `/super-harness:handoff` invocation.
