@@ -2,7 +2,7 @@
 description: "Start a new feature or project with structured brainstorming. Explores intent, requirements, and design before any implementation."
 ---
 
-Show version banner first:
+Show version banner first. The version is already in your session context (injected by the harness SessionStart hook as "harness is active (vX.Y.Z ...)"). Extract the version from there and display:
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -10,11 +10,6 @@ super-harness v<VERSION>
 
 欢迎使用 super-harness v<VERSION>
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
-获取版本号：
-```bash
-python3 -c "import json; print(json.load(open('.claude-plugin/plugin.json'))['version'])"
 ```
 
 Then ask for the exact feature/problem:
