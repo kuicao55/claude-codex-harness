@@ -9,7 +9,7 @@ Turn ideas into fully formed designs and specs through natural collaborative dia
 
 **Announce at start:** "I'm using the harness-brainstorming skill."
 
-**Show version banner:**
+**Show version banner.** The version is already in your session context (injected by the harness SessionStart hook as "harness is active (vX.Y.Z ...)"). Extract the version from there and display:
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -19,13 +19,12 @@ super-harness v<VERSION>
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-获取版本号：
-```bash
-python3 -c "import json; print(json.load(open('.claude-plugin/plugin.json'))['version'])"
-```
-
 <HARD-GATE>
 Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
+
+"Simple" projects are where unexamined assumptions cause the most wasted work.
+A todo list, a single-function utility, a config change — all of them go through this process.
+You cannot rationalize your way out of this gate. There are no exceptions.
 </HARD-GATE>
 
 ## Checklist
@@ -57,7 +56,7 @@ You MUST create a task for each of these items and complete them in order:
 7. **Spec self-review** — scan for placeholders, contradictions, ambiguity, scope issues (fix inline)
 8. **User reviews written spec** — ask user to review before proceeding
 9. **Scale assessment** — briefly assess: single session or multi-session project? (feeds into plan-writing)
-10. **Transition to plan-writing** — invoke `harness-plan-writing`
+10. **Transition to plan-writing** — invoke `harness-plan-writing` (see HARD-GATE below)
 
 ## The Process
 
@@ -205,7 +204,19 @@ This assessment is provided as context to `harness-plan-writing`.
 
 > "Spec approved. I suggest we now move to implementation planning. Continue? (yes/no)"
 
-Wait for user confirmation, then **invoke `harness-plan-writing`.**
+Wait for user confirmation, then:
+
+<HARD-GATE>
+You are transitioning from brainstorming to plan-writing.
+- MUST invoke the `harness-plan-writing` skill via the Skill tool.
+- MUST NOT enter your native plan mode (EnterPlanMode).
+- MUST NOT write any code or scaffold any project.
+- MUST NOT skip to implementation.
+- MUST NOT invoke any skill other than `harness-plan-writing`.
+The ONLY valid next action is invoking `harness-plan-writing`.
+</HARD-GATE>
+
+**invoke `harness-plan-writing`.**
 
 ## Key Principles
 

@@ -14,7 +14,7 @@ elif [[ -f "claude-progress.json" ]]; then
 fi
 
 # Build the context message
-CONTEXT="harness is active (v3.6.0 — Orchestrator / Executor / Reviewer architecture).
+CONTEXT="harness is active (v3.6.0-dev001 — Orchestrator / Executor / Reviewer architecture).
 
 Available commands:
   /super-harness:brainstorm  — Start structured brainstorming (with optional Visual Companion and scope decomposition)
@@ -31,6 +31,13 @@ Architecture:
   All implementation happens in a git worktree (created on first execution, shared across milestones).
 
 Session boundary: Every session ends with a handoff document at .super-harness/handoffs/. Resume reads this to restore context.
+
+EnterPlanMode intercept:
+  When you are about to enter your native plan mode, STOP.
+  If a /super-harness: command is active or a harness skill is in progress, you MUST follow the harness skill flow — do NOT enter your native plan mode.
+  harness skills override your default plan mode behavior.
+  The only valid planning action is invoking the harness-plan-writing skill via the Skill tool.
+  This applies to ALL harness skill transitions (brainstorming → plan-writing, plan-writing → execution, etc.).
 
 Available skills:
   harness:harness-brainstorming   — Structured brainstorming with visual companion
@@ -83,4 +90,4 @@ output = {
     }
 }
 print(json.dumps(output))
-" "$CONTEXT" 2>/dev/null || echo "{\"hookSpecificOutput\": {\"additionalContext\": \"harness v3.6.0 active. Commands: /super-harness:brainstorm, /super-harness:plan, /super-harness:execute, /super-harness:resume, /super-harness:status\"}}"
+" "$CONTEXT" 2>/dev/null || echo "{\"hookSpecificOutput\": {\"additionalContext\": \"harness v3.6.0-dev001 active. EnterPlanMode intercept: Do NOT enter native plan mode when a harness skill is active — invoke harness-plan-writing via Skill tool instead. Commands: /super-harness:brainstorm, /super-harness:plan, /super-harness:execute, /super-harness:resume, /super-harness:status\"}}"
