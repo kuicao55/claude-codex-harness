@@ -1,0 +1,8 @@
+# macOS
+.DS_Store
+
+# Claude Code local settings (user-specific permissions)
+.claude/settings.local.json
+
+# Visual Companion session files
+.harness/
