@@ -14,7 +14,7 @@ elif [[ -f "claude-progress.json" ]]; then
 fi
 
 # Build the context message
-CONTEXT="harness is active (v3.6.0-dev001 — Orchestrator / Executor / Reviewer architecture).
+CONTEXT="harness is active (v3.6.1 — Orchestrator / Executor / Reviewer architecture).
 
 Available commands:
   /super-harness:brainstorm  — Start structured brainstorming (with optional Visual Companion and scope decomposition)
@@ -24,6 +24,7 @@ Available commands:
   /super-harness:handoff     — Package session state and clear context (normally called automatically)
   /super-harness:status      — Check current project and milestone status
   /super-harness:init        — Generate project context from existing codebase (for existing projects, not new)
+  /super-harness:git-release — Version release flow (version bump, GitHub Release, marketplace update)
 
 Architecture:
   Orchestrator coordinates execution. Executor writes code (TDD). Two Reviewers audit independently.
@@ -90,4 +91,4 @@ output = {
     }
 }
 print(json.dumps(output))
-" "$CONTEXT" 2>/dev/null || echo "{\"hookSpecificOutput\": {\"additionalContext\": \"harness v3.6.0-dev001 active. EnterPlanMode intercept: Do NOT enter native plan mode when a harness skill is active — invoke harness-plan-writing via Skill tool instead. Commands: /super-harness:brainstorm, /super-harness:plan, /super-harness:execute, /super-harness:resume, /super-harness:status\"}}"
+" "$CONTEXT" 2>/dev/null || echo "{\"hookSpecificOutput\": {\"additionalContext\": \"harness v3.6.1 active. EnterPlanMode intercept: Do NOT enter native plan mode when a harness skill is active — invoke harness-plan-writing via Skill tool instead. Commands: /super-harness:brainstorm, /super-harness:plan, /super-harness:execute, /super-harness:resume, /super-harness:status, /super-harness:git-release\"}}"

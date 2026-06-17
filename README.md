@@ -1,4 +1,4 @@
-# super-harness v3.5.1
+# super-harness v3.6.1
 
 > **Built on [obra/superpowers](https://github.com/obra/superpowers)** — the agentic skills framework and software development methodology by Jesse Vincent. This project extends superpowers with cross-session milestone tracking, mandatory activity logging, an Orchestrator / Executor / Reviewer agent architecture, and dual-engine Codex integration. If you haven't seen superpowers, start there first.
 
@@ -117,6 +117,7 @@ Only Code Quality Review **PASS** closes a task. The Orchestrator never writes o
 | `/super-harness:status`     | Read-only | Display current milestone and task progress                                                      |
 | `/super-harness:handoff`     | Session   | Package session state into Handoff Document, trigger `/clear` for fresh context                 |
 | `/super-harness:tdd-audit` | Audit     | Manual TDD Process Audit (normally called automatically by Orchestrator between Executor and Spec)  |
+| `/super-harness:git-release` | Release  | Full version release flow: version bump, GitHub Release, marketplace update                      |
 
 All commands route through `harness-entry`, which initializes cross-cutting concerns (`progress-management`, `activity-logging`) for every command path.
 
@@ -841,6 +842,7 @@ super-harness/
     execute.md                     # /super-harness:execute → routes to harness-entry
     resume.md                      # /super-harness:resume → routes to harness-entry
     status.md                      # /super-harness:status (read-only, no routing needed)
+    git-release.md                 # /super-harness:git-release → full version release flow
   hooks/
     hooks.json                     # SessionStart hook registration
     run-hook.sh                    # Cross-platform hook launcher
@@ -876,7 +878,7 @@ super-harness/
     activity-logging/SKILL.md      # JSONL activity logging
     codex-integration/SKILL.md     # Codex operations manual
     progress-management/SKILL.md   # claude-progress.json CRUD
-  .claude-plugin/plugin.json       # Plugin manifest (v3.2.0)
+  .claude-plugin/plugin.json       # Plugin manifest (v3.6.1)
   .version-bump.json               # Files to update on version bump
   LICENSE                          # MIT
 ```
@@ -907,7 +909,7 @@ your-project/
 
 Both plugins can be installed simultaneously without conflict.
 
-| Feature                        | [superpowers](https://github.com/obra/superpowers) | super-harness v3.2.0                                  |
+| Feature                        | [superpowers](https://github.com/obra/superpowers) | super-harness v3.6.1                                  |
 | ------------------------------ | -------------------------------------------------- | ------------------------------------------------------------ |
 | Trigger                        | SessionStart hook                                  | Explicit `/super-harness:` commands                                |
 | Session scope                  | Single-session                                     | Multi-session milestone tracking                             |

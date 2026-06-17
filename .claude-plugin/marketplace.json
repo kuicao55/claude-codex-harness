@@ -11,7 +11,7 @@
         "path": "."
       },
       "description": "Structured development workflow with Orchestrator / Executor / Reviewer architecture, cross-session progress tracking, activity logging, Visual Companion, and dual-engine Codex integration",
-      "version": "3.6.0-dev001",
+      "version": "3.6.1",
       "author": {
         "name": "kuicao55"
       },
@@ -29,5 +29,6 @@
         "visual-companion"
       ]
     }
-  ]
+  ],
+  "version": "3.6.1"
 }
